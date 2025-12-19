@@ -1,0 +1,58 @@
+<div class="comment-item" id="comment-{{ node.id }}"
+    style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+
+    <div id="display-area-{{ node.id }}">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <strong style="color: #2c3e50;">{{ node.author }}</strong>
+            <small style="color: #bdc3c7;">{{ node.created_date|date:"Y-m-d H:i" }}</small>
+        </div>
+
+        <div style="color: #5d6d7e;">
+            {% if node.parent %}
+            <span style="color: #3498db; font-size: 0.9em;">@{{ node.parent.author }}</span>
+            {% endif %}
+            <span id="text-content-{{ node.id }}">{{ node.text|linebreaks }}</span>
+        </div>
+
+        <div style="margin-top: 15px; border-top: 1px solid #f8f9fa; padding-top: 10px; font-size: 0.85rem;">
+            <a href="javascript:void(0)" onclick="prepareReply('{{ node.id }}', '{{ node.author }}')"
+                style="color: #3498db; text-decoration: none; margin-right: 15px;">回复</a>
+
+            {% if user.is_authenticated %}
+                {% if user.username == node.author or user.is_superuser %}
+                    <a href="javascript:void(0)" onclick="enterEditMode('{{ node.id }}')"
+                        style="color: #95a5a6; text-decoration: none; margin-right: 15px;">修改</a>
+                    <a href="{% url 'comment_remove' pk=node.id %}" onclick="return confirm('确定删除吗？')"
+                        style="color: #e74c3c; text-decoration: none;">删除</a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <div id="edit-area-{{ node.id }}" style="display: none;">
+        <form method="POST" action="{% url 'comment_edit' pk=node.id %}">
+            {% csrf_token %}
+            <div style="margin-bottom: 10px;">
+                <strong style="color: #2c3e50;">修改评论内容：</strong>
+            </div>
+            <textarea name="text" id="textarea-{{ node.id }}"
+                style="width: 100%; min-height: 100px; padding: 12px; border: 1px solid #3498db; border-radius: 8px; box-sizing: border-box; font-family: inherit;">{{ node.text }}</textarea>
+            <div style="margin-top: 10px; text-align: right;">
+                <button type="button" onclick="exitEditMode('{{ node.id }}')"
+                    style="background: #f1f2f6; border: none; padding: 6px 15px; border-radius: 4px; cursor: pointer; color: #7f8c8d;">取消</button>
+                <button type="submit"
+                    style="background: #2c3e50; color: white; border: none; padding: 6px 15px; border-radius: 4px; cursor: pointer; margin-left: 10px;">保存更新</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if node.replies.all %}
+<div class="replies-container" style="margin-left: 40px; border-left: 2px solid #eee; padding-left: 15px;">
+    {% for reply in node.replies.all %}
+        {% with node=reply %}
+            {% include "blog/comment_thread.html" %}
+        {% endwith %}
+    {% endfor %}
+</div>
+{% endif %}

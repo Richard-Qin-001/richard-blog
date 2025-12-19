@@ -24,6 +24,7 @@ class Comment(models.Model):
     author = models.CharField(max_length=100)
     text = models.TextField()
     created_date = models.DateTimeField(default=timezone.now)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
 
     def __str__(self):
         return self.text

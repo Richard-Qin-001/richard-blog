@@ -40,38 +40,70 @@
     </div>
 </article>
 
-<section class="comment-section" style="margin-top: 60px; max-width: 800px;">
+<section class="comment-section" id="comments" style="margin-top: 60px; max-width: 800px;">
     <h3 style="border-left: 5px solid #2c3e50; padding-left: 15px; margin-bottom: 30px;">
         💬 评论 ({{ post.comments.count }})
     </h3>
 
     {% for comment in post.comments.all %}
-    <div class="comment-item"
-        style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-            <strong style="color: #2c3e50;">{{ comment.author }}</strong>
-            <small style="color: #bdc3c7;">{{ comment.created_date|date:"Y-m-d H:i" }}</small>
-        </div>
-        <div style="color: #5d6d7e;">{{ comment.text|linebreaks }}</div>
-    </div>
+        {% if not comment.parent %} 
+            {% with node=comment %}
+                {% include "blog/comment_thread.html" %}
+            {% endwith %}
+        {% endif %}
     {% empty %}
     <p style="text-align: center; color: #bdc3c7; padding: 40px 0;">暂无评论，虚位以待...</p>
     {% endfor %}
 
     {% if perms.blog.add_comment or user.is_superuser %}
-        <div class="comment-form-container">
-            <h4>✍️ 发表你的看法</h4>
-            <form method="POST" class="post-form">
-                {% csrf_token %}
-                {{ form.as_p }}
+    <div class="comment-form-container" id="reply-box" style="margin-top: 40px;">
+        <h4 id="form-title">✍️ 发表你的看法</h4>
+        <form method="POST" class="post-form">
+            {% csrf_token %}
+            <input type="hidden" name="parent_id" id="parent_id_input" value="">
+
+            {{ form.as_p }}
+
+            <div style="display: flex; justify-content: space-between;">
                 <button type="submit" class="comment-submit-btn">提交评论</button>
-            </form>
-        </div>
-    {% else %}
-        <div
-            style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-top: 40px; text-align: center; border: 1px solid #eee;">
-            <p style="color: #95a5a6; margin: 0;">🔒 您当前所在的组为只读模式，无法发表评论。</p>
-        </div>
+                <button type="button" id="cancel-reply-btn" onclick="resetForm()"
+                    style="display:none; background:none; border:none; color:#95a5a6; cursor:pointer;">取消回复</button>
+            </div>
+        </form>
+    </div>
     {% endif %}
 </section>
+
+<script>
+    function prepareReply(id, author) {
+        document.getElementById('parent_id_input').value = id;
+        document.getElementById('form-title').innerText = "💬 回复 " + author + "：";
+        document.getElementById('cancel-reply-btn').style.display = "inline-block";
+        window.scrollTo({
+            top: document.getElementById('reply-box').offsetTop - 100,
+            behavior: 'smooth'
+        });
+    }
+
+    function resetForm() {
+        document.getElementById('parent_id_input').value = "";
+        document.getElementById('form-title').innerText = "✍️ 发表你的看法";
+        document.getElementById('cancel-reply-btn').style.display = "none";
+    }
+
+    function enterEditMode(id) {
+            document.getElementById('display-area-' + id).style.display = 'none';
+            document.getElementById('edit-area-' + id).style.display = 'block';
+            document.getElementById('textarea-' + id).focus();
+        }
+
+    function exitEditMode(id) {
+        const textarea = document.getElementById('textarea-' + id);
+        if (textarea.value !== textarea.defaultValue) {
+            if (!confirm('您已经修改了内容，确定要放弃保存吗？')) return;
+        }
+        document.getElementById('display-area-' + id).style.display = 'block';
+        document.getElementById('edit-area-' + id).style.display = 'none';
+    }
+</script>
 {% endblock %}

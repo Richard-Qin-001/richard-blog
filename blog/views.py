@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
 from .models import Post
-from .forms import CommentForm, SignupForm, PostForm
+from .forms import CommentForm, SignupForm, PostForm, Comment
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.contrib.auth import login
@@ -17,12 +17,17 @@ def post_detail(request, pk):
     if request.method == "POST":
         if not request.user.has_perm('blog.add_comment'):
             from django.contrib import messages
-            messages.error(request, "你所在的组没有发表评论的权限。")
+            messages.error(request, "Your group does not have permission to post comments.")
             return redirect('post_detail', pk=post.pk)
         form = CommentForm(request.POST)
         if form.is_valid():
             comment = form.save(commit=False)
             comment.post = post
+            comment.author = request.user.username
+            parent_id = request.POST.get('parent_id')
+            if parent_id:
+                from .models import Comment
+                comment.parent = Comment.objects.get(id=parent_id)
             comment.save()
             return redirect(f"{reverse('post_detail', kwargs={'pk': post.pk})}#comments")
     else:
@@ -45,6 +50,8 @@ def signup(request):
     else:
         form = SignupForm()
     return render(request, 'registration/signup.html', {'form': form})
+
+
 @permission_required('blog.add_post', raise_exception=True)
 def post_new(request):
     if request.method == "POST":
@@ -87,3 +94,41 @@ def post_remove(request, pk):
         return redirect('post_list')
     else:
         return redirect('post_detail', pk=post.pk)
+    
+@login_required
+def comment_remove(request, pk):
+    comment = get_object_or_404(Comment, pk=pk)
+    post_pk = comment.post.pk
+    if request.user.username == comment.author or request.user.is_superuser:
+        comment.delete()
+    return redirect('post_detail', pk=post_pk)
+
+@login_required
+def comment_edit(request, pk):
+    comment = get_object_or_404(Comment, pk=pk)
+    if request.user.username != comment.author and not request.user.is_superuser:
+        return redirect('post_detail', pk=comment.post.pk)
+    
+    if request.method == "POST":
+        form = CommentForm(request.POST, instance=comment)
+        if form.is_valid():
+            comment = form.save()
+            return redirect('post_detail', pk=comment.post.pk)
+    else:
+        form = CommentForm(instance=comment)
+    return render(request, 'blog/comment_edit.html', {'form': form})
+
+@login_required
+def comment_edit(request, pk):
+    comment = get_object_or_404(Comment, pk=pk)
+    if request.user.username != comment.author and not request.user.is_superuser:
+        return redirect('post_detail', pk=comment.post.pk)
+    
+    if request.method == "POST":
+        new_text = request.POST.get('text')
+        if new_text:
+            comment.text = new_text
+            comment.save()
+        return redirect(f"{reverse('post_detail', kwargs={'pk': comment.post.pk})}#comment-{comment.id}")
+    
+    return redirect('post_detail', pk=comment.post.pk)
