@@ -1,0 +1,48 @@
+{% extends 'blog/base.html' %}
+{% load blog_tags %}
+
+{% block content %}
+    <article>
+        <h2>{{ post.title }}</h2>
+        <p>{{ post.text|markdown }}</p>
+    </article>
+
+    <hr>
+    <div class="comment-section">
+        <h3>共有 {{ post.comments.count }} 条评论</h3>
+    
+        {% for comment in post.comments.all %}
+            <div class="comment-item">
+                <div class="comment-header">
+                    <span class="comment-author">👤 {{ comment.author }}</span>
+                    <span class="comment-date">{{ comment.created_date|date:"Y-m-d H:i" }}</span>
+                </div>
+                <div class="comment-body">
+                    {{ comment.text|linebreaks }}
+                </div>
+            </div>
+        {% empty %}
+            <p style="color: #95a5a6; text-align: center;">还没有评论，快来留下你的足迹吧！</p>
+        {% endfor %}
+    
+        <div class="comment-form" style="margin-top: 40px; background: #f8f9fa; padding: 20px; border-radius: 12px;">
+            <h4>发表评论</h4>
+            <form method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit">发送评论</button>
+            </form>
+        </div>
+    </div>
+
+
+    <hr>
+    <h4>发表评论</h4>
+    <form method="POST">
+        {% csrf_token %} <div style="display: flex; flex-direction: column; gap: 10px; max-width: 400px;">
+            {{ form.as_p }}
+            <button type="submit"
+                style="padding: 10px; background: #2c3e50; color: white; border: none; cursor: pointer;">提交评论</button>
+        </div>
+    </form>
+{% endblock %}

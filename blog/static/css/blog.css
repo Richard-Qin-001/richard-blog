@@ -1,0 +1,114 @@
+body {
+    padding-left: 15px;
+    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background-color: #f8f9fa;
+    line-height: 1.6;
+}
+
+h1 a,
+h2 a {
+    color: #2c3e50;
+    text-decoration: none;
+}
+
+article {
+    margin-bottom: 40px;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+}
+
+time {
+    color: #7f8c8d;
+    font-size: 0.9em;
+}
+
+pre {
+    background-color: #2d2d2d !important;
+    padding: 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    border: 1px solid #1a1a1a;
+}
+
+pre code {
+    background-color: transparent !important;
+    color: #ccc !important;
+    padding: 0;
+    font-family: 'Consolas', 'Monaco', monospace;
+    text-shadow: none;
+}
+
+p > code {
+    background-color: #f0f0f0;
+    color: #c7254e;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.comment-section {
+    max-width: 800px;
+    margin-top: 50px;
+    border-top: 1px solid #eee;
+    padding-top: 30px;
+}
+
+.comment-item {
+    background: #ffffff;
+    border: 1px solid #e1e4e8;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: transform 0.2s ease;
+}
+
+.comment-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.comment-author {
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 1.1em;
+}
+
+.comment-date {
+    color: #95a5a6;
+    font-size: 0.85em;
+}
+
+.comment-form input,
+.comment-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: inherit;
+    margin-top: 5px;
+}
+
+.comment-form button {
+    background: #34495e;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.comment-form button:hover {
+    background: #2c3e50;
+}
