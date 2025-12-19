@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.contrib.auth import login
 from django.contrib.auth.decorators import permission_required, login_required
 from django.contrib.auth.models import Group
+from django.http import JsonResponse
 
 def post_list(request):
     posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
@@ -96,6 +97,21 @@ def post_remove(request, pk):
         return redirect('post_detail', pk=post.pk)
     
 @login_required
+def post_like(request, pk):
+    post = get_object_or_404(Post, id=pk)
+    if post.likes.filter(id=request.user.id).exists():
+        post.likes.remove(request.user)
+        liked = False
+    else:
+        post.likes.add(request.user)
+        liked = True
+    return JsonResponse({'liked': liked, 'count': post.total_likes()})
+
+
+
+
+    
+@login_required
 def comment_remove(request, pk):
     comment = get_object_or_404(Comment, pk=pk)
     post_pk = comment.post.pk
@@ -132,3 +148,14 @@ def comment_edit(request, pk):
         return redirect(f"{reverse('post_detail', kwargs={'pk': comment.post.pk})}#comment-{comment.id}")
     
     return redirect('post_detail', pk=comment.post.pk)
+
+@login_required
+def comment_like(request, pk):
+    comment = get_object_or_404(Comment, id=pk)
+    if comment.likes.filter(id=request.user.id).exists():
+        comment.likes.remove(request.user)
+        liked = False
+    else:
+        comment.likes.add(request.user)
+        liked = True
+    return JsonResponse({'liked': liked, 'count': comment.total_likes()})

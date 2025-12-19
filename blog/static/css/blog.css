@@ -245,6 +245,19 @@ header .container {
     min-height: 400px;
 }
 
+#post-like-btn {
+    transition: all 0.3s ease;
+}
+
+#post-like-btn:active {
+    transform: scale(0.9);
+}
+
+.replies-container {
+    border-left: 2px solid #f1f2f6;
+}
+
+
 .save-btn {
     background: #2c3e50;
     color: white;

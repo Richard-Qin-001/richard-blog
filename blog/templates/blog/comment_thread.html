@@ -27,6 +27,12 @@
                 {% endif %}
             {% endif %}
         </div>
+
+        <a href="javascript:void(0)" onclick="likeComment({{ node.id }})"
+            style="color: #e74c3c; text-decoration: none; margin-right: 15px;">
+            👍 <span id="comment-like-count-{{ node.id }}">{{ node.total_likes }}</span>
+        </a>
+
     </div>
 
     <div id="edit-area-{{ node.id }}" style="display: none;">

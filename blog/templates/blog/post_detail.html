@@ -33,6 +33,14 @@
             <span style="margin-left: 15px;">👤 {{ post.author.username }}</span>
             {% endif %}
         </div>
+
+        <div class="post-actions" style="margin: 20px 0;">
+            <button id="post-like-btn" onclick="likePost({{ post.id }})"
+                style="background: none; border: 1px solid #ed4956; color: #ed4956; padding: 8px 15px; border-radius: 20px; cursor: pointer;">
+                ❤️ <span id="post-like-count">{{ post.total_likes }}</span> 点赞
+            </button>
+        </div>
+
     </header>
 
     <div class="post-content-body" style="font-size: 1.1rem; line-height: 1.8; color: #34495e;">
@@ -105,5 +113,30 @@
         document.getElementById('display-area-' + id).style.display = 'block';
         document.getElementById('edit-area-' + id).style.display = 'none';
     }
+
+    function likePost(postId) {
+            fetch(`/post/${postId}/like/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const btn = document.getElementById('post-like-btn');
+                    document.getElementById('post-like-count').innerText = data.count;
+                    btn.style.backgroundColor = data.liked ? '#ed4956' : 'transparent';
+                    btn.style.color = data.liked ? 'white' : '#ed4956';
+                });
+        }
+
+        function likeComment(commentId) {
+            fetch(`/comment/${commentId}/like/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById(`comment-like-count-${commentId}`).innerText = data.count;
+                });
+        }
 </script>
 {% endblock %}
