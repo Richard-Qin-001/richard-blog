@@ -1,0 +1,12 @@
+{% extends 'blog/base.html' %}
+
+{% block content %}
+    <h2>撰写新文章</h2>
+    <form method="POST" class="post-form">
+        {% csrf_token %}
+        <div style="margin-bottom: 20px;">
+            {{ form.as_p }}
+        </div>
+        <button type="submit" class="save btn btn-default">保存文章</button>
+    </form>
+{% endblock %}
