@@ -59,16 +59,12 @@
     {% endfor %}
 
     {% if perms.blog.add_comment or user.is_superuser %}
-        <div class="comment-form-container"
-            style="background: #fff; padding: 30px; border-radius: 12px; margin-top: 40px; border: 1px dashed #dcdde1;">
-            <h4 style="margin-top: 0;">发表你的看法</h4>
-            <form method="POST">
+        <div class="comment-form-container">
+            <h4>✍️ 发表你的看法</h4>
+            <form method="POST" class="post-form">
                 {% csrf_token %}
                 {{ form.as_p }}
-                <button type="submit"
-                    style="background: #2c3e50; color: white; border: none; padding: 10px 30px; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                    提交评论
-                </button>
+                <button type="submit" class="comment-submit-btn">提交评论</button>
             </form>
         </div>
     {% else %}
