@@ -35,14 +35,4 @@
         </div>
     </div>
 
-
-    <hr>
-    <h4>发表评论</h4>
-    <form method="POST">
-        {% csrf_token %} <div style="display: flex; flex-direction: column; gap: 10px; max-width: 400px;">
-            {{ form.as_p }}
-            <button type="submit"
-                style="padding: 10px; background: #2c3e50; color: white; border: none; cursor: pointer;">提交评论</button>
-        </div>
-    </form>
 {% endblock %}
