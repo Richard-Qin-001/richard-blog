@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
-from .models import Post, Tag
+from .models import Post, Tag, Profile
 from .forms import CommentForm, SignupForm, PostForm, Comment, ProfileForm
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -167,7 +167,7 @@ def signup(request):
 
 @login_required
 def profile_edit(request):
-    profile = request.user.profile
+    profile, created = Profile.objects.get_or_create(user=request.user)
     if request.method == "POST":
         form = ProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
