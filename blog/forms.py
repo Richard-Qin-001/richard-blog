@@ -1,5 +1,5 @@
 from django import forms
-from .models import Comment, Tag, Post
+from .models import Comment, Tag, Post, Profile
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 
@@ -42,3 +42,16 @@ class PostForm(forms.ModelForm):
                     tag_obj, _ = Tag.objects.get_or_create(name=name.strip())
                     instance.tags.add(tag_obj)
         return instance
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ('nickname', 'gender', 'birthday', 'bio', 'avatar')
+        widgets = {
+            'nickname': forms.TextInput(attrs={'class': 'form-control'}),
+            'gender': forms.Select(attrs={'class': 'form-control'}),
+            'birthday': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'avatar': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+    

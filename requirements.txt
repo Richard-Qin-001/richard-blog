@@ -3,3 +3,4 @@ Django == 6.0
 Markdown==3.9
 Pygments==2.19.2
 sqlparse==0.5.5
+pillow ==11.3.0

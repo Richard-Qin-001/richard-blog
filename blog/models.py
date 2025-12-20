@@ -2,6 +2,9 @@ from django.db import models
 from django.utils import timezone
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from PIL import Image
 
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -44,3 +47,48 @@ class Comment(models.Model):
     
     def total_likes(self):
         return self.likes.count()
+    
+class Profile(models.Model):
+    GENDER_CHOICES = (
+        ('M', '男'),
+        ('F', '女'),
+        ('O', '其他'),
+        ('U', '保密'),
+    )
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    nickname = models.CharField(max_length=50, blank=True, verbose_name="昵称")
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='U', verbose_name="性别")
+    birthday = models.DateField(null=True, blank=True, verbose_name="生日")
+    bio = models.TextField(max_length=500, blank=True, verbose_name="个人简介")
+    avatar = models.ImageField(upload_to='avatars/', default='avatars/default.png', blank=True, verbose_name="头像")
+
+    def __str__(self):
+        return self.nickname or self.user.username
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.avatar:
+            img_path = self.avatar.path
+            img = Image.open(img_path)
+            if img.height > 200 or img.width > 200:
+                width, height = img.size
+                min_side = min(width, height)
+                left = (width - min_side) / 2
+                top = (height - min_side) / 2
+                right = (width + min_side) / 2
+                bottom = (height + min_side) / 2
+
+                img = img.crop((left, top, right, bottom))
+                img.thumbnail((200, 200), Image.LANCZOS)
+                img.save(img_path, quality=85)
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance, nickname=instance.username)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()

@@ -1,13 +1,14 @@
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
 from .models import Post, Tag
-from .forms import CommentForm, SignupForm, PostForm, Comment
+from .forms import CommentForm, SignupForm, PostForm, Comment, ProfileForm
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.contrib.auth import login
 from django.contrib.auth.decorators import permission_required, login_required
 from django.contrib.auth.models import Group
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Q
 
@@ -50,23 +51,6 @@ def post_detail(request, pk):
     else:
         form = CommentForm()
     return render(request, 'blog/post_detail.html', {'post': post, 'form': form})
-
-def signup(request):
-    if request.method == "POST":
-        form = SignupForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            try:
-                default_group = Group.objects.get(name='Guests')
-                user.groups.add(default_group)
-            except Group.DoesNotExist:
-                pass
-                
-            login(request, user)
-            return redirect('post_list')
-    else:
-        form = SignupForm()
-    return render(request, 'registration/signup.html', {'form': form})
 
 
 @permission_required('blog.add_post', raise_exception=True)
@@ -133,20 +117,6 @@ def comment_remove(request, pk):
         comment.delete()
     return redirect('post_detail', pk=post_pk)
 
-@login_required
-def comment_edit(request, pk):
-    comment = get_object_or_404(Comment, pk=pk)
-    if request.user.username != comment.author and not request.user.is_superuser:
-        return redirect('post_detail', pk=comment.post.pk)
-    
-    if request.method == "POST":
-        form = CommentForm(request.POST, instance=comment)
-        if form.is_valid():
-            comment = form.save()
-            return redirect('post_detail', pk=comment.post.pk)
-    else:
-        form = CommentForm(instance=comment)
-    return render(request, 'blog/comment_edit.html', {'form': form})
 
 @login_required
 def comment_edit(request, pk):
@@ -159,7 +129,7 @@ def comment_edit(request, pk):
         if new_text:
             comment.text = new_text
             comment.save()
-        return redirect(f"{reverse('post_detail', kwargs={'pk': comment.post.pk})}#comment-{comment.id}")
+            return redirect(f"{reverse('post_detail', kwargs={'pk': comment.post.pk})}#comment-{comment.id}")
     
     return redirect('post_detail', pk=comment.post.pk)
 
@@ -173,3 +143,37 @@ def comment_like(request, pk):
         comment.likes.add(request.user)
         liked = True
     return JsonResponse({'liked': liked, 'count': comment.total_likes()})
+
+
+
+
+
+def signup(request):
+    if request.method == "POST":
+        form = SignupForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            try:
+                default_group = Group.objects.get(name='Guests')
+                user.groups.add(default_group)
+            except Group.DoesNotExist:
+                pass
+                
+            login(request, user)
+            return redirect('post_list')
+    else:
+        form = SignupForm()
+    return render(request, 'registration/signup.html', {'form': form})
+
+@login_required
+def profile_edit(request):
+    profile = request.user.profile
+    if request.method == "POST":
+        form = ProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"太棒了，{profile.nickname}！您的个人资料已更新。")
+            return redirect('post_list')
+    else:
+        form = ProfileForm(instance=profile)
+    return render(request, 'blog/profile_edit.html', {'form': form})

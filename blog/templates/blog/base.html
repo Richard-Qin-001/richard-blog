@@ -4,7 +4,6 @@
     <head>
         <title>Python Dev Blog</title>
         <link rel="stylesheet" href="{% static 'css/blog.css' %}">
-
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <script>
@@ -18,11 +17,24 @@
         <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </head>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const messages = document.querySelectorAll('.alert');
+            messages.forEach(function (message) {
+                setTimeout(function () {
+                    message.style.transition = "opacity 0.5s ease";
+                    message.style.opacity = "0";
+                    setTimeout(() => message.remove(), 500);
+                }, 3000);
+            });
+        });
+    </script>
+
     <body>
         <header style="background-color: #2c3e50; padding: 15px 0;">
-            <div class="container">
+            <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
                 <h1><a href="/" style="color: white; text-decoration: none;">Python Dev Blog</a></h1>
-        
+
                 <div class="search-section" style="flex-grow: 1; display: flex; justify-content: center; margin: 0 30px;">
                     <form method="GET" action="{% url 'post_list' %}"
                         style="display: flex; width: 100%; max-width: 400px; margin-bottom: 0;">
@@ -35,31 +47,44 @@
                     </form>
                 </div>
 
-
-                <nav class="user-nav">
+                <nav class="user-nav" style="display: flex; align-items: center; color: white;">
                     {% if user.is_authenticated %}
-                        <span class="welcome-text">欢迎, $ {{ user.username }} $ !</span>
+
+                        {% if user.profile.avatar %}
+                            <img src="{{ user.profile.avatar.url }}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                        {% else %}
+                            <div
+                                style="width: 32px; height: 32px; border-radius: 50%; background: #3498db; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; margin-right: 10px;">
+                                {{ user.username|slice:":1"|upper }}
+                            </div>
+                        {% endif %}
+
+                        <span class="user-info" style="margin-right: 15px;">
+                            👋 您好，<a href="{% url 'profile_edit' %}" ...>{{ user.profile.nickname|default:user.username }}</a> (ID: {{ user.id }})
+                        </span>
 
                         <span class="user-role"
-                            style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; font-size: 0.8em; margin-left: 5px;">
+                            style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; font-size: 0.8em; margin-right: 15px;">
                             {% if user.is_superuser %}
-                                👑 Administrators (Root)
+                            👑 Administrator (Root)
                             {% elif perms.blog.add_post %}
-                                🛡️ Administrators
+                            🛡️ Administrator
                             {% elif perms.blog.add_comment %}
-                                👤 Users
+                            👤 User
                             {% else %}
-                                👁️ Guests
+                            👁️ Guest
                             {% endif %}
                         </span>
-        
-                        {% if user.is_superuser or perms.blog.add_post %}
-                            <a href="{% url 'post_new' %}" class="add-post-link">+ 发布文章</a>
-                        {% endif %}
-            
+
+                    {% if user.is_superuser or perms.blog.add_post %}
+                        <a href="{% url 'post_new' %}" class="add-post-link"
+                            style="color: #ffca28; text-decoration: none; margin-right: 15px;">+ 发布文章</a>
+                    {% endif %}
+
                         <form action="{% url 'logout' %}" method="post" style="margin: 0;">
                             {% csrf_token %}
-                            <button type="submit" class="logout-btn">退出</button>
+                                <button type="submit" class="logout-btn"
+                                    style="background: none; border: 1px solid white; color: white; padding: 4px 10px; border-radius: 4px; cursor: pointer;">退出</button>
                         </form>
                     {% else %}
                         <a href="{% url 'login' %}" style="color: white; text-decoration: none;">登录</a>
