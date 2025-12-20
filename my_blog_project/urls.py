@@ -28,4 +28,6 @@ urlpatterns = [
     path('accounts/signup/', views.signup, name='signup'), 
     path('accounts/recovery/', views.password_recovery, name='password_recovery'),
     path('', include('blog.urls')),
+    path('users/', views.user_list, name='user_list'),
+    path('users/<str:username>/', views.profile_public, name='profile_public'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

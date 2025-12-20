@@ -10,7 +10,9 @@ from django.contrib.auth.models import Group, User
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.http import JsonResponse
-from django.db.models import Q
+from django.db.models import Q, Count
+from django.db.models.functions import TruncDay
+from datetime import timedelta
 
 def post_list(request, tag_name = None):
     query = request.GET.get('q')
@@ -41,12 +43,24 @@ def post_detail(request, pk):
         if form.is_valid():
             comment = form.save(commit=False)
             comment.post = post
-            comment.author = request.user.username
+            comment.author = request.user
             parent_id = request.POST.get('parent_id')
             if parent_id:
                 from .models import Comment
                 comment.parent = Comment.objects.get(id=parent_id)
             comment.save()
+
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'status': 'success',
+                    'comment_id': comment.id,
+                    'author_nickname': comment.author.profile.nickname or comment.author.username,
+                    'author_username': comment.author.username,
+                    'text': comment.text,
+                    'created_date': comment.created_date.strftime('%Y-%m-%d %H:%M'),
+                    'avatar_url': comment.author.profile.avatar.url if comment.author.profile.avatar else '/static/images/default.png',
+                    'parent_id': parent_id
+                })
             return redirect(f"{reverse('post_detail', kwargs={'pk': post.pk})}#comments")
     else:
         form = CommentForm()
@@ -113,8 +127,16 @@ def post_like(request, pk):
 def comment_remove(request, pk):
     comment = get_object_or_404(Comment, pk=pk)
     post_pk = comment.post.pk
-    if request.user.username == comment.author or request.user.is_superuser:
+    can_delete = (
+        comment.author == request.user or 
+        request.user.is_superuser or 
+        request.user.has_perm('blog.delete_comment')
+    )
+    if can_delete:
         comment.delete()
+        messages.success(request, "评论已成功删除。")
+    else:
+        messages.error(request, "您没有权限删除此评论。")
     return redirect('post_detail', pk=post_pk)
 
 
@@ -176,7 +198,7 @@ def profile_edit(request):
             return redirect('post_list')
     else:
         form = ProfileForm(instance=profile)
-    return render(request, 'blog/profile_edit.html', {'form': form})
+    return render(request, 'user/profile_edit.html', {'form': form})
 
 def password_recovery(request):
     if request.method == "POST":
@@ -197,3 +219,48 @@ def password_recovery(request):
             messages.error(request, "该用户名不存在。")
             
     return render(request, 'registration/password_recovery.html')
+
+def user_list(request):
+    users = User.objects.annotate(post_count=Count('post')).select_related('profile').order_by('-date_joined')
+    return render(request, 'user/user_list.html', {'users': users})
+
+def profile_public(request, username):
+    profile_user = get_object_or_404(User, username=username)
+    posts = Post.objects.filter(author=profile_user).order_by('-published_date')
+    comment_count = Comment.objects.filter(author=profile_user).count()
+    recent_comments = Comment.objects.filter(author=profile_user).select_related('post').order_by('-created_date')[:10]
+
+    unread_replies = []
+    if request.user == profile_user:
+        unread_replies = list(Comment.objects.filter(
+            parent__author=request.user, 
+            is_read=False
+        ).exclude(author=request.user).select_related('post', 'author'))
+        Comment.objects.filter(parent__author=request.user, is_read=False).update(is_read=True)
+
+    one_year_ago = timezone.now() - timedelta(days=365)
+    post_activity = Post.objects.filter(author=profile_user, created_date__gte=one_year_ago) \
+        .annotate(day=TruncDay('created_date')) \
+        .values('day') \
+        .annotate(count=Count('id'))
+    
+    comment_activity = Comment.objects.filter(author=profile_user, created_date__gte=one_year_ago) \
+        .annotate(day=TruncDay('created_date')) \
+        .values('day') \
+        .annotate(count=Count('id'))
+    activity_data = {}
+    for entry in post_activity:
+        day_str = entry['day'].strftime('%Y-%m-%d')
+        activity_data[day_str] = activity_data.get(day_str, 0) + entry['count']
+    for entry in comment_activity:
+        day_str = entry['day'].strftime('%Y-%m-%d')
+        activity_data[day_str] = activity_data.get(day_str, 0) + entry['count']
+    
+    return render(request, 'user/profile.html', {
+        'profile_user': profile_user,
+        'posts': posts,
+        'recent_comments': recent_comments,
+        'unread_replies': unread_replies,
+        'comment_count': comment_count,
+        'activity_data': activity_data,
+    })

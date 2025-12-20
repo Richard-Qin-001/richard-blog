@@ -7,7 +7,15 @@ from django.core.exceptions import ValidationError
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
-        fields = ('author', 'text',)
+        fields = ('text',)
+        widgets = {
+            'text': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'placeholder': '在此输入您的评论...',
+                'rows': 3,
+                'style': 'width: 100%; border-radius: 10px; padding: 10px;'
+            }),
+        }
 
 class SignupForm(UserCreationForm):
 

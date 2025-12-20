@@ -1,0 +1,66 @@
+{% extends 'blog/base.html' %}
+{% block content %}
+<div style="max-width: 1100px; margin: 0 auto; padding: 20px;">
+    <div style="margin-bottom: 30px; border-left: 5px solid #3498db; padding-left: 15px;">
+        <h2 style="margin: 0; color: #2c3e50; font-size: 1.8rem;">👥 社区成员</h2>
+        <p style="margin: 5px 0 0; color: #7f8c8d; font-size: 0.95rem;">发现更多有趣的 Python 开发者</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 30px;">
+        {% for u in users %}
+        <div class="user-card"
+            style="background: white; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); padding: 0; text-align: center; overflow: hidden; transition: all 0.3s ease; border: 1px solid #f0f0f0;">
+
+            <div style="height: 80px; background: linear-gradient(135deg, #3498db 0%, #8e44ad 100%); opacity: 0.8;">
+            </div>
+
+            <div style="margin-top: -45px; position: relative;">
+                <img src="{% if u.profile.avatar %}{{ u.profile.avatar.url }}{% else %}/media/avatars/default.png{% endif %}"
+                    style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 5px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                {% if u.is_superuser %}
+                <span title="管理员"
+                    style="position: absolute; bottom: 0; right: calc(50% - 45px); background: #ffca28; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: 2px solid white; font-size: 12px;">👑</span>
+                {% endif %}
+            </div>
+
+            <div style="padding: 15px 20px 25px;">
+                <h3 style="margin: 10px 0 5px; color: #2c3e50; font-size: 1.2rem;">
+                    {{u.profile.nickname|default:u.username }}
+                </h3>
+                <p style="color: #bdc3c7; font-size: 0.8rem; margin-bottom: 15px;">@{{ u.username }}</p>
+
+                <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 20px;">
+                    <div style="text-align: center;">
+                        <div style="font-weight: bold; color: #3498db; font-size: 1.1rem;">$ {{ u.post_count }} $</div>
+                        <div style="font-size: 0.75rem; color: #95a5a6;">文章</div>
+                    </div>
+                    <div style="width: 1px; background: #eee;"></div>
+                    <div style="text-align: center;">
+                        <div style="font-weight: bold; color: #3498db; font-size: 1.1rem;">{{ u.id }}</div>
+                        <div style="font-size: 0.75rem; color: #95a5a6;">UID</div>
+                    </div>
+                </div>
+
+                <a href="{% url 'profile_public' u.username %}" class="view-btn"
+                    style="display: block; padding: 10px; background: #f8f9fa; color: #3498db; border-radius: 12px; text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: all 0.3s;">
+                    进入主页
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .user-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+        border-color: #3498db !important;
+    }
+
+    .view-btn:hover {
+        background: #3498db !important;
+        color: white !important;
+    }
+</style>
+{% endblock %}

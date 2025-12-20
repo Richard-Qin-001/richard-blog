@@ -1,0 +1,229 @@
+{% extends 'blog/base.html' %}
+
+{% block content %}
+<div
+    style="max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 300px 1fr; gap: 30px; padding: 20px;">
+
+    <aside>
+        <div
+            style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; position: sticky; top: 20px;">
+            <img src="{{ profile_user.profile.avatar.url }}"
+                style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid #f8f9fa; margin-bottom: 15px;">
+
+            <h2 style="margin: 10px 0 5px; color: #2c3e50;">
+                {{ profile_user.profile.nickname|default:profile_user.username }}
+            </h2>
+            <p style="color: #95a5a6; font-size: 0.9rem; margin-bottom: 20px;">@{{ profile_user.username }}</p>
+
+            <div
+                style="text-align: left; font-size: 0.9rem; color: #5d6d7e; border-top: 1px solid #eee; padding-top: 15px;">
+                <p>📅 <strong>加入时间:</strong><br>
+                    <span style="color: #95a5a6;">{{ profile_user.date_joined|date:"Y-m-d" }}</span>
+                </p>
+                <p>📝 <strong>个人简介:</strong><br>
+                    <span style="color: #95a5a6;">{{ profile_user.profile.bio|default:"暂无简介" }}</span>
+                </p>
+            </div>
+
+            <div
+                style="display: flex; justify-content: space-around; border-top: 1px solid #eee; padding-top: 20px; margin-top: 10px;">
+                <div>
+                    <strong style="display: block; font-size: 1.2rem; color: #2c3e50;">{{ posts.count }}</strong>
+                    <span style="color: #95a5a6; font-size: 0.8rem;">文章</span>
+                </div>
+                <div>
+                    <strong style="display: block; font-size: 1.2rem; color: #2c3e50;">{{ comment_count }}</strong>
+                    <span style="color: #95a5a6; font-size: 0.8rem;">评论</span>
+                </div>
+            </div>
+
+            {% if user == profile_user %}
+            <a href="{% url 'profile_edit' %}"
+                style="display: block; margin-top: 25px; background: #3498db; color: white; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: 600; transition: 0.3s;">
+                ⚙️ 编辑个人资料
+            </a>
+            {% endif %}
+        </div>
+    </aside>
+
+    <main>
+        <div
+            style="background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px;">
+            <h4 style="margin-top: 0; color: #2c3e50; font-size: 0.9rem;">📅 过去一年的创作贡献</h4>
+            <div id="activity-heatmap"
+                style="display: grid; grid-template-columns: repeat(53, 1fr); gap: 3px; height: 80px;">
+            </div>
+            <div
+                style="display: flex; justify-content: flex-end; align-items: center; margin-top: 10px; font-size: 0.7rem; color: #95a5a6;">
+                少 <div style="width: 10px; height: 10px; background: #ebedf0; margin: 0 2px;"></div>
+                <div style="width: 10px; height: 10px; background: #c6e48b; margin: 0 2px;"></div>
+                <div style="width: 10px; height: 10px; background: #7bc96f; margin: 0 2px;"></div>
+                <div style="width: 10px; height: 10px; background: #239a3b; margin: 0 2px;"></div> 多
+            </div>
+        </div>
+
+        {% if user == profile_user and unread_replies %}
+            <div
+                style="background: #fff5f5; border: 1px solid #feb2b2; border-radius: 15px; padding: 20px; margin-bottom: 25px; animation: slideIn 0.5s ease;">
+                <h4 style="margin-top: 0; color: #c53030; font-size: 0.9rem; display: flex; align-items: center;">
+                    🔔 您有 {{ unread_replies.count }} 条新回复
+                </h4>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    {% for reply in unread_replies %}
+                    <div
+                        style="background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid #f56565;">
+                        <div style="font-size: 0.85rem; margin-bottom: 5px;">
+                            <strong>{{ reply.author.profile.nickname|default:reply.author.username }}</strong>
+                            在 <a href="{% url 'post_detail' pk=reply.post.pk %}#comment-{{ reply.id }}"
+                                style="color: #3182ce; text-decoration: none; font-weight: bold;">《{{ reply.post.title }}》</a>
+                            中回复了你：
+                        </div>
+                        <div style="color: #4a5568; font-size: 0.9rem; font-style: italic;">
+                            "{{ reply.text|truncatechars:80 }}"
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <style>
+                @keyframes slideIn {
+                    from {
+                        opacity: 0;
+                        transform: translateX(-10px);
+                    }
+            
+                    to {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+                }
+            </style>
+        {% endif %}
+
+        <div
+            style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 500px;">
+            <nav style="display: flex; gap: 30px; border-bottom: 2px solid #f8f9fa; margin-bottom: 25px;">
+                <div id="tab-posts" onclick="switchTab('posts')"
+                    style="padding-bottom: 10px; color: #3498db; border-bottom: 3px solid #3498db; font-weight: bold; cursor: pointer;">
+                    📝 最近文章
+                </div>
+                <div id="tab-comments" onclick="switchTab('comments')"
+                    style="padding-bottom: 10px; color: #95a5a6; border-bottom: 3px solid transparent; font-weight: bold; cursor: pointer;">
+                    💬 最近评论
+                </div>
+            </nav>
+
+            <div id="content-posts" class="tab-content">
+                {% for post in posts %}
+                <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px dashed #eee;">
+                    <h4 style="margin: 0 0 10px 0;">
+                        <a href="{% url 'post_detail' pk=post.pk %}" style="color: #2c3e50; text-decoration: none;">{{post.title }}</a>
+                    </h4>
+                    <div style="font-size: 0.85rem; color: #95a5a6;">
+                        📅 {{ post.published_date|date:"Y-m-d" }} · 👍 {{ post.total_likes }} 点赞 · 💬 {{post.comments.count }} 评论
+                    </div>
+                </div>
+                {% empty %}
+                <p style="text-align: center; color: #bdc3c7; padding: 40px 0;">该用户尚未发表文章</p>
+                {% endfor %}
+            </div>
+
+            <div id="content-comments" class="tab-content" style="display: none;">
+                {% for comment in recent_comments %}
+                <div
+                    style="margin-bottom: 20px; padding: 15px; background: #f8fbff; border-radius: 10px; border-left: 4px solid #3498db;">
+                    <div style="font-size: 0.85rem; color: #7f8c8d; margin-bottom: 8px;">
+                        在文章 <a href="{% url 'post_detail' pk=comment.post.pk %}#comment-{{ comment.id }}"
+                            style="color: #3498db; font-weight: bold; text-decoration: none;">《{{ comment.post.title}}》</a>
+                        中回复：
+                    </div>
+                    <div style="color: #2c3e50; font-style: italic; margin-bottom: 8px;">
+                        "{{ comment.text|truncatechars:100 }}"
+                    </div>
+                    <div style="font-size: 0.8rem; color: #bdc3c7;">
+                        📅 {{ comment.created_date|date:"Y-m-d H:i" }}
+                    </div>
+                </div>
+                {% empty %}
+                <p style="text-align: center; color: #bdc3c7; padding: 40px 0;">该用户尚未发表评论</p>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    const activityData = {{ activity_data| safe }};
+    const heatmap = document.getElementById('activity-heatmap');
+    const today = new Date();
+
+    for (let i = 364; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        const count = activityData[dateStr] || 0;
+        const cell = document.createElement('div');
+        cell.title = `${dateStr}: ${count} 次贡献`;
+        cell.style.borderRadius = '2px';
+        if (count === 0) cell.style.background = '#ebedf0';
+        else if (count < 3) cell.style.background = '#c6e48b';
+        else if (count < 6) cell.style.background = '#7bc96f';
+        else cell.style.background = '#239a3b';
+        heatmap.appendChild(cell);
+    }
+
+    function switchTab(type) {
+        document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+        const targetContent = document.getElementById('content-' + type);
+        if (targetContent) targetContent.style.display = 'block';
+
+        const tabs = ['posts', 'comments'];
+        tabs.forEach(t => {
+            const tabEl = document.getElementById('tab-' + t);
+            if (tabEl) {
+                tabEl.style.color = '#95a5a6';
+                tabEl.style.borderBottomColor = 'transparent';
+            }
+        });
+
+        const activeTab = document.getElementById('tab-' + type);
+        if (activeTab) {
+            activeTab.style.color = '#3498db';
+            activeTab.style.borderBottomColor = '#3498db';
+        }
+        if (history.replaceState) {
+            history.replaceState(null, null, '#' + type);
+        } else {
+            location.hash = '#' + type;
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const hash = window.location.hash.replace('#', '');
+        if (['posts', 'comments'].includes(hash)) {
+            switchTab(hash);
+        } else {
+            switchTab('posts');
+        }
+    });
+</script>
+
+<style>
+    .tab-content {
+        animation: fadeInTab 0.4s ease;
+    }
+
+    @keyframes fadeInTab {
+        from {
+            opacity: 0;
+            transform: translateY(5px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}

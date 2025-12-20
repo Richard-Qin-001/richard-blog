@@ -84,12 +84,10 @@
     {% if perms.blog.add_comment or user.is_superuser %}
     <div class="comment-form-container" id="reply-box" style="margin-top: 40px;">
         <h4 id="form-title">✍️ 发表你的看法</h4>
-        <form method="POST" class="post-form">
+        <form method="POST" class="post-form" id="ajax-comment-form">
             {% csrf_token %}
             <input type="hidden" name="parent_id" id="parent_id_input" value="">
-
             {{ form.as_p }}
-
             <div style="display: flex; justify-content: space-between;">
                 <button type="submit" class="comment-submit-btn">提交评论</button>
                 <button type="button" id="cancel-reply-btn" onclick="resetForm()"
@@ -101,9 +99,9 @@
 </section>
 
 <script>
-    function prepareReply(id, author) {
+    function prepareReply(id, username) {
         document.getElementById('parent_id_input').value = id;
-        document.getElementById('form-title').innerText = "💬 回复 " + author + "：";
+        document.getElementById('form-title').innerText = "💬 回复 " + username + ": ";
         document.getElementById('cancel-reply-btn').style.display = "inline-block";
         window.scrollTo({
             top: document.getElementById('reply-box').offsetTop - 100,
@@ -156,5 +154,99 @@
                     document.getElementById(`comment-like-count-${commentId}`).innerText = data.count;
                 });
         }
+
+        document.getElementById('ajax-comment-form').addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                const submitBtn = this.querySelector('.comment-submit-btn');
+                const formData = new FormData(this);
+                const postUrl = window.location.href;
+
+                submitBtn.disabled = true;
+                submitBtn.innerText = "正在提交...";
+
+                fetch(postUrl, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': formData.get('csrf_token')
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('服务器响应错误');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'success') {
+                            const newCommentId = `comment-${data.comment_id}`;
+                            const newCommentHtml = `
+                <div class="comment-item" id="${newCommentId}" style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2); border-left: 4px solid #3498db; animation: fadeIn 0.6s ease;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <strong style="color: #2c3e50;">${data.author_nickname} <span style="font-weight: normal; color: #95a5a6; font-size: 0.8rem;">(刚刚)</span></strong>
+                        <small style="color: #bdc3c7;">${data.created_date}</small>
+                    </div>
+                    <div style="color: #5d6d7e; line-height: 1.6;">
+                        ${data.parent_id ? `<span style="color: #3498db; font-size: 0.9em;">@${data.author_username} </span>` : ''}
+                        <span>${data.text}</span>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 0.85rem; color: #3498db;">
+                        ✓ 已发布成功
+                    </div>
+                </div>
+            `;
+
+                            const commentSection = document.querySelector('.comment-section');
+
+                            if (data.parent_id) {
+                                const parentComment = document.getElementById('comment-' + data.parent_id);
+                                if (parentComment) {
+                                    let container = parentComment.nextElementSibling;
+                                    if (!container || !container.classList.contains('replies-container')) {
+                                        container = document.createElement('div');
+                                        container.className = 'replies-container';
+                                        container.style = 'margin-left: 40px; border-left: 2px solid #eee; padding-left: 15px;';
+                                        parentComment.parentNode.insertBefore(container, parentComment.nextSibling);
+                                    }
+                                    container.insertAdjacentHTML('beforeend', newCommentHtml);
+                                }
+                            }
+                            else {
+                                const emptyMsg = commentSection.querySelector('p[style*="text-align: center"]');
+                                if (emptyMsg) emptyMsg.remove();
+
+                                const title = commentSection.querySelector('h3');
+                                if (title) {
+                                    title.insertAdjacentHTML('afterend', newCommentHtml);
+                                } else {
+                                    commentSection.insertAdjacentHTML('afterbegin', newCommentHtml);
+                                }
+                            }
+
+                            if (window.MathJax && window.MathJax.typeset) {
+                                window.MathJax.typeset();
+                            }
+                            const newElem = document.getElementById(newCommentId);
+                            if (newElem) {
+                                newElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+
+                            this.reset();
+                            if (typeof resetForm === 'function') resetForm();
+                        } else {
+                            alert("提交失败：" + (data.message || "未知原因"));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Detailed Error:', error);
+                        alert("操作未能完成，请检查控制台报错或网络连接");
+                    })
+                    .finally(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = "提交评论";
+                    });
+            });
 </script>
 {% endblock %}

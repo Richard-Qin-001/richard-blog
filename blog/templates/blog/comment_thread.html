@@ -3,36 +3,37 @@
 
     <div id="display-area-{{ node.id }}">
         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-            <strong style="color: #2c3e50;">{{ node.author }}</strong>
+            <strong style="color: #2c3e50;">
+                {{ node.author.profile.nickname|default:node.author.username }}
+            </strong>
             <small style="color: #bdc3c7;">{{ node.created_date|date:"Y-m-d H:i" }}</small>
         </div>
 
         <div style="color: #5d6d7e;">
             {% if node.parent %}
-            <span style="color: #3498db; font-size: 0.9em;">@{{ node.parent.author }}</span>
+            <span style="color: #3498db; font-size: 0.9em;">@{{ node.parent.author.username }}</span>
             {% endif %}
             <span id="text-content-{{ node.id }}">{{ node.text|linebreaks }}</span>
         </div>
 
         <div style="margin-top: 15px; border-top: 1px solid #f8f9fa; padding-top: 10px; font-size: 0.85rem;">
-            <a href="javascript:void(0)" onclick="prepareReply('{{ node.id }}', '{{ node.author }}')"
+            <a href="javascript:void(0)" onclick="prepareReply('{{ node.id }}', '{{ node.author.username }}')"
                 style="color: #3498db; text-decoration: none; margin-right: 15px;">回复</a>
 
             {% if user.is_authenticated %}
-                {% if user.username == node.author or user.is_superuser %}
-                    <a href="javascript:void(0)" onclick="enterEditMode('{{ node.id }}')"
-                        style="color: #95a5a6; text-decoration: none; margin-right: 15px;">修改</a>
-                    <a href="{% url 'comment_remove' pk=node.id %}" onclick="return confirm('确定删除吗？')"
-                        style="color: #e74c3c; text-decoration: none;">删除</a>
-                {% endif %}
+            {% if user == node.author or user.is_superuser %}
+            <a href="javascript:void(0)" onclick="enterEditMode('{{ node.id }}')"
+                style="color: #95a5a6; text-decoration: none; margin-right: 15px;">修改</a>
+            <a href="{% url 'comment_remove' pk=node.id %}" onclick="return confirm('确定删除吗？')"
+                style="color: #e74c3c; text-decoration: none; margin-right: 15px;">删除</a>
             {% endif %}
+            {% endif %}
+
+            <a href="javascript:void(0)" onclick="likeComment({{ node.id }})"
+                style="color: #e74c3c; text-decoration: none;">
+                👍 <span id="comment-like-count-{{ node.id }}">{{ node.total_likes }}</span>
+            </a>
         </div>
-
-        <a href="javascript:void(0)" onclick="likeComment({{ node.id }})"
-            style="color: #e74c3c; text-decoration: none; margin-right: 15px;">
-            👍 <span id="comment-like-count-{{ node.id }}">{{ node.total_likes }}</span>
-        </a>
-
     </div>
 
     <div id="edit-area-{{ node.id }}" style="display: none;">
@@ -56,9 +57,9 @@
 {% if node.replies.all %}
 <div class="replies-container" style="margin-left: 40px; border-left: 2px solid #eee; padding-left: 15px;">
     {% for reply in node.replies.all %}
-        {% with node=reply %}
-            {% include "blog/comment_thread.html" %}
-        {% endwith %}
+    {% with node=reply %}
+    {% include "blog/comment_thread.html" %}
+    {% endwith %}
     {% endfor %}
 </div>
 {% endif %}
