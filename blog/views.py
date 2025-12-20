@@ -92,11 +92,13 @@ def post_edit(request, pk):
             form = PostForm(request.POST, instance=post)
             if form.is_valid():
                 post = form.save()
+                messages.success(request, "文章更新成功！")
                 return redirect('post_detail', pk=post.pk)
         else:
             form = PostForm(instance=post)
         return render(request, 'blog/post_edit.html', {'form': form})
     else:
+        messages.error(request, "你没有权限编辑这篇文章。")
         return redirect('post_detail', pk=post.pk)
 
 @login_required
