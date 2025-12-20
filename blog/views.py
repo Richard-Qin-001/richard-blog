@@ -8,9 +8,14 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import permission_required, login_required
 from django.contrib.auth.models import Group
 from django.http import JsonResponse
+from django.db.models import Q
 
 def post_list(request):
-    posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
+    query = request.GET.get('q')
+    if query:
+        posts = Post.objects.filter(Q(title__icontains=query) | Q(text__icontains=query), published_date__isnull=False).distinct().order_by('published_date')
+    else:
+        posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
     return render(request, 'blog/post_list.html', {'posts' : posts})
 
 def post_detail(request, pk):

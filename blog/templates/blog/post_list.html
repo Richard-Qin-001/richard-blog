@@ -9,4 +9,19 @@
         <p>{{ post.text|markdown }}</p>
     </article>
     {% endfor %}
+
+    {% if query %}
+        <div style="margin-bottom: 20px; color: #7f8c8d;">
+            <h3>🔍 关于 "{{ query }}" 的搜索结果：</h3>
+            <p>共找到 $ {{ posts.count }} $ 篇文章</p>
+            <a href="{% url 'post_list' %}" style="color: #3498db; text-decoration: none;">清除搜索结果</a>
+        </div>
+    {% endif %}
+    
+    {% for post in posts %}
+        {% empty %}
+        <div style="text-align: center; padding: 50px 0;">
+            <p style="font-size: 1.2rem; color: #bdc3c7;">抱歉，没有找到相关文章 😅</p>
+        </div>
+    {% endfor %}
 {% endblock %}

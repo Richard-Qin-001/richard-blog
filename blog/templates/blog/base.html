@@ -23,6 +23,19 @@
             <div class="container">
                 <h1><a href="/" style="color: white; text-decoration: none;">Python Dev Blog</a></h1>
         
+                <div class="search-section" style="flex-grow: 1; display: flex; justify-content: center; margin: 0 30px;">
+                    <form method="GET" action="{% url 'post_list' %}"
+                        style="display: flex; width: 100%; max-width: 400px; margin-bottom: 0;">
+                        <input type="text" name="q" placeholder="搜索文章..." value="{{ query|default:'' }}"
+                            style="width: 100%; padding: 8px 15px; border: none; border-radius: 20px 0 0 20px; outline: none; font-size: 0.9rem;">
+                        <button type="submit"
+                            style="padding: 8px 18px; border: none; background: #3498db; color: white; border-radius: 0 20px 20px 0; cursor: pointer;">
+                            🔍
+                        </button>
+                    </form>
+                </div>
+
+
                 <nav class="user-nav">
                     {% if user.is_authenticated %}
                         <span class="welcome-text">欢迎, $ {{ user.username }} $ !</span>
