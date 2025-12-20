@@ -1,22 +1,33 @@
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
-from .models import Post
+from .models import Post, Tag
 from .forms import CommentForm, SignupForm, PostForm, Comment
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.contrib.auth import login
 from django.contrib.auth.decorators import permission_required, login_required
 from django.contrib.auth.models import Group
+from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
 from django.db.models import Q
 
-def post_list(request):
+def post_list(request, tag_name = None):
     query = request.GET.get('q')
+    posts = Post.objects.filter(published_date__lte=timezone.now())
+
+    if tag_name:
+        tag = get_object_or_404(Tag, name = tag_name)
+        posts = posts.filter(tags=tag)
     if query:
-        posts = Post.objects.filter(Q(title__icontains=query) | Q(text__icontains=query), published_date__isnull=False).distinct().order_by('published_date')
-    else:
-        posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
+        posts = posts.filter(Q(title__icontains=query) | Q(text__icontains=query), published_date__isnull=False).distinct()
+    posts = posts.order_by('published_date')
     return render(request, 'blog/post_list.html', {'posts' : posts})
+
+@staff_member_required
+def tag_delete(request, pk):
+    tag = get_object_or_404(Tag, pk=pk)
+    tag.delete()
+    return redirect('post_list')
 
 def post_detail(request, pk):
     post = get_object_or_404(Post, pk=pk)
@@ -67,6 +78,7 @@ def post_new(request):
             post.author = request.user
             post.published_date = timezone.now()
             post.save()
+            form.save()
             return redirect('post_detail', pk=post.pk)
     else:
         form = PostForm()
@@ -81,10 +93,7 @@ def post_edit(request, pk):
         if request.method == "POST":
             form = PostForm(request.POST, instance=post)
             if form.is_valid():
-                post = form.save(commit=False)
-                post.author = request.user
-                post.published_date = timezone.now()
-                post.save()
+                post = form.save()
                 return redirect('post_detail', pk=post.pk)
         else:
             form = PostForm(instance=post)

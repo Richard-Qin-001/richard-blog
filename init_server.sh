@@ -1,4 +1,4 @@
-echo "开始初始化博客系统..."
+echo "Initializing blog system..."
 
 if [ -f "requirements.txt" ]; then
     echo "Installing/updating dependencies..."

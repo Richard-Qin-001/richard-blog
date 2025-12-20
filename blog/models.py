@@ -3,6 +3,12 @@ from django.utils import timezone
 from django.conf import settings
 from django.contrib.auth.models import User
 
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
 class Post(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="作者")
     title = models.CharField(max_length=200)
@@ -10,6 +16,7 @@ class Post(models.Model):
     created_date = models.DateTimeField(default=timezone.now)
     published_date = models.DateTimeField(blank=True, null=True)
     likes = models.ManyToManyField(User, related_name='blog_posts', blank=True)
+    tags = models.ManyToManyField(Tag, related_name='posts', blank=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -1,23 +1,44 @@
 from django import forms
-from .models import Comment
+from .models import Comment, Tag, Post
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
 
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ('author', 'text',)
 
-from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
-
 class SignupForm(UserCreationForm):
     class Meta:
         model = User
         fields = ('username', 'email')
 
-from django import forms
-from .models import Post
-
-class PostForm(forms.ModelForm):
+class PostForm(forms.ModelForm):   
+    tags = forms.CharField(
+        required=False,
+        label="文章标签",
+        widget=forms.SelectMultiple(attrs={'class': 'select2-tags'})
+    )
     class Meta:
         model = Post
-        fields = ('title', 'text',)
+        fields = ('title', 'text', 'tags',)
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['tags'].widget.choices = [(t.name, t.name) for t in Tag.objects.all()]
+        if self.instance.pk:
+            self.initial['tags'] = [t.name for t in self.instance.tags.all()]
+        
+    def save(self, commit = True):
+        instance = super().save(commit=False)
+        if commit:
+            instance.save()
+        
+        if instance.pk:
+            instance.tags.clear()
+            tag_names = self.data.getlist('tags')
+            for name in tag_names:
+                if name.strip():
+                    tag_obj, _ = Tag.objects.get_or_create(name=name.strip())
+                    instance.tags.add(tag_obj)
+        return instance

@@ -267,3 +267,44 @@ header .container {
     font-weight: bold;
     cursor: pointer;
 }
+
+.tag-item-wrapper {
+    display: inline-flex;
+    align-items: center;
+    background: #f1f2f6;
+    margin: 5px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    transition: all 0.2s;
+}
+
+.tag-item-wrapper:hover {
+    background: #e1e4e8;
+}
+
+.tag-link {
+    text-decoration: none;
+    color: #2c3e50;
+    font-size: 0.9rem;
+}
+
+.tag-delete-link {
+    margin-left: 8px;
+    color: #95a5a6;
+    text-decoration: none;
+    font-size: 1.2rem;
+    font-weight: bold;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.tag-delete-link:hover {
+    background-color: #e74c3c;
+    color: white !important;
+}
