@@ -77,4 +77,13 @@
         <button type="submit" class="save-btn" style="width: 100%; margin-top: 20px;">保存修改</button>
     </form>
 </div>
+<div
+    style="background-color: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+    <strong style="color: #856404;">🔐 安全提醒：</strong>
+    <p style="font-size: 0.9rem; margin-top: 5px;">
+        您的恢复密钥为：<code
+            style="background: #eee; padding: 2px 5px; font-weight: bold;">{{ user.profile.recovery_key }}</code>
+    </p>
+    <small style="color: #6c757d;">请妥善保管此密钥。忘记密码时，这是唯一的找回途径（除联系管理员外）。</small>
+</div>
 {% endblock %}

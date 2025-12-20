@@ -26,5 +26,6 @@ urlpatterns = [
     path('accounts/login/', auth_views.LoginView.as_view(), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(next_page='/'), name='logout'),
     path('accounts/signup/', views.signup, name='signup'), 
+    path('accounts/recovery/', views.password_recovery, name='password_recovery'),
     path('', include('blog.urls')),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

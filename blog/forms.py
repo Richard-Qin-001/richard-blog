@@ -2,6 +2,7 @@ from django import forms
 from .models import Comment, Tag, Post, Profile
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
+from django.core.exceptions import ValidationError
 
 class CommentForm(forms.ModelForm):
     class Meta:
@@ -9,9 +10,19 @@ class CommentForm(forms.ModelForm):
         fields = ('author', 'text',)
 
 class SignupForm(UserCreationForm):
+
+    email = forms.EmailField(required=False, help_text="可选。若填写，之后可用邮箱登录")
+
     class Meta:
         model = User
-        fields = ('username', 'email')
+        fields = ('username', 'email', )
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email:
+            if User.objects.filter(email=email).exists():
+                raise ValidationError("该邮箱已被其他账号注册。")
+        return email
 
 class PostForm(forms.ModelForm):   
     tags = forms.CharField(

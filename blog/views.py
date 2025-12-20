@@ -6,7 +6,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.contrib.auth import login
 from django.contrib.auth.decorators import permission_required, login_required
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.http import JsonResponse
@@ -159,7 +159,7 @@ def signup(request):
             except Group.DoesNotExist:
                 pass
                 
-            login(request, user)
+            login(request, user, backend='blog.backends.EmailOrUsernameBackend')
             return redirect('post_list')
     else:
         form = SignupForm()
@@ -177,3 +177,23 @@ def profile_edit(request):
     else:
         form = ProfileForm(instance=profile)
     return render(request, 'blog/profile_edit.html', {'form': form})
+
+def password_recovery(request):
+    if request.method == "POST":
+        username = request.POST.get('username')
+        key = request.POST.get('recovery_key').strip().upper()
+        new_password = request.POST.get('new_password')
+        
+        try:
+            user = User.objects.get(username=username)
+            if user.profile.recovery_key == key:
+                user.set_password(new_password)
+                user.save()
+                messages.success(request, "密码已通过密钥重置成功，请重新登录！")
+                return redirect('login')
+            else:
+                messages.error(request, "恢复密钥不正确。")
+        except User.DoesNotExist:
+            messages.error(request, "该用户名不存在。")
+            
+    return render(request, 'registration/password_recovery.html')

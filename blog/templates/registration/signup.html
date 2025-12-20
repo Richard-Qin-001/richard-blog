@@ -1,10 +1,16 @@
 {% extends 'blog/base.html' %}
 
 {% block content %}
-    <h2>注册新账号</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">立即注册</button>
-    </form>
+    <div class="signup-box" style="max-width: 400px; margin: 50px auto;">
+        <h2>📝 注册新账号</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <p style="font-size: 0.85rem; color: #7f8c8d;">温馨提示：设置邮箱后，忘记密码时可通过邮箱找回。</p>
+            <button type="submit" class="btn">立即注册</button>
+        </form>
+        <p style="color: #7f8c8d; font-size: 0.9rem; margin-top: 10px;">
+            💡 注册成功后，请前往“编辑资料”查看并保存您的 **16位恢复密钥**，以便找回密码。
+        </p>
+    </div>
 {% endblock %}

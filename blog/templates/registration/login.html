@@ -1,10 +1,22 @@
 {% extends 'blog/base.html' %}
 
 {% block content %}
-    <h2>登录</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">登录</button>
-    </form>
+    <div class="login-box" style="max-width: 400px; margin: 50px auto;">
+        <h2>🔑 登录</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div style="margin-bottom: 15px;">
+                <label>账号：</label>
+                <input type="text" name="username" placeholder="用户名 或 电子邮箱" required style="width: 100%; padding: 8px;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label>密码：</label>
+                <input type="password" name="password" placeholder="请输入密码" required style="width: 100%; padding: 8px;">
+            </div>
+            <button type="submit" class="btn">登录</button>
+        </form>
+        <p style="margin-top: 15px;">
+            <a href="{% url 'password_recovery' %}" style="color: #e67e22;">忘记密码？使用恢复密钥找回</a>
+        </p>
+    </div>
 {% endblock %}
