@@ -214,14 +214,16 @@
                 </div>
                 <div id="file-list" class="file-preview-list"></div>
 
-                <div id="existing-attachments" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 10px;">
-                    {% for attachment in form.instance.attachments.all %}
-                    <div class="file-preview-item" id="att-{{ attachment.pk }}">
-                        📎 {{ attachment.file.name|cut:'blog_attachments/' }}
-                        <span class="delete-attachment" onclick="deleteAttachment({{ attachment.pk }})">×</span>
+                {% if post.pk %}
+                    <div id="existing-attachments" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 10px;">
+                        {% for attachment in form.instance.attachments.all %}
+                        <div class="file-preview-item" id="att-{{ attachment.pk }}">
+                            📎 {{ attachment.file.name|cut:'blog_attachments/' }}
+                            <span class="delete-attachment" onclick="deleteAttachment({{ attachment.pk }})">×</span>
+                        </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
-                </div>
+                {% endif %}
             </div>
 
             <div class="form-section">
