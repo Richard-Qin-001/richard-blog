@@ -1,5 +1,6 @@
 asgiref == 3.11.0
 Django == 6.0
+django-cleanup == 9.0.0
 Markdown==3.9
 Pygments==2.19.2
 sqlparse==0.5.5

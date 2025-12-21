@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
-from .models import Post, Tag, Profile
+from .models import Post, Tag, Profile, Attachment
 from .forms import CommentForm, SignupForm, PostForm, Comment, ProfileForm
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -12,6 +12,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Q, Count
 from django.db.models.functions import TruncDay
+from django.views.decorators.csrf import csrf_exempt
 from datetime import timedelta
 
 def post_list(request, tag_name = None):
@@ -70,13 +71,16 @@ def post_detail(request, pk):
 @permission_required('blog.add_post', raise_exception=True)
 def post_new(request):
     if request.method == "POST":
-        form = PostForm(request.POST)
+        form = PostForm(request.POST, request.FILES)
         if form.is_valid():
             post = form.save(commit=False)
             post.author = request.user
             post.published_date = timezone.now()
             post.save()
             form.save()
+            files = request.FILES.getlist('attachments')
+            for f in files:
+                Attachment.objects.create(post=post, file=f)
             return redirect('post_detail', pk=post.pk)
     else:
         form = PostForm()
@@ -89,9 +93,12 @@ def post_edit(request, pk):
     
     if (can_change and request.user == post.author) or request.user.is_superuser:
         if request.method == "POST":
-            form = PostForm(request.POST, instance=post)
+            form = PostForm(request.POST, request.FILES, instance=post)
             if form.is_valid():
                 post = form.save()
+                files = request.FILES.getlist('attachments')
+                for f in files:
+                    Attachment.objects.create(post=post, file=f)
                 messages.success(request, "文章更新成功！")
                 return redirect('post_detail', pk=post.pk)
         else:
@@ -121,6 +128,25 @@ def post_like(request, pk):
         liked = True
     return JsonResponse({'liked': liked, 'count': post.total_likes()})
 
+@login_required
+def attachment_delete(request, pk):
+    attachment = get_object_or_404(Attachment, pk = pk)
+    if request.user == attachment.post.author or request.user.is_superuser:
+        attachment.delete()
+        return JsonResponse({'status': 'ok'})
+    return JsonResponse({'status': 'error', 'message': '没有权限'}, status=403)
+
+@csrf_exempt
+@login_required
+def api_image_upload(request):
+    if request.method == "POST" and request.FILES.get('image'):
+        img = request.FILES['image']
+        instance = Attachment.objects.create(file=img)
+        return JsonResponse({
+            'success': True,
+            'url': instance.file.url
+        })
+    return JsonResponse({'success': False}, status=400)
 
 
 

@@ -2,6 +2,142 @@
 {% load blog_tags %}
 
 {% block content %}
+<style>
+    .post-content-body img {
+        max-width: 100% !important;
+        height: auto !important;
+        display: block;
+        margin: 1.5rem auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        cursor: zoom-in;
+        transition: opacity 0.2s;
+    }
+    .post-content-body img:hover{
+        opacity: 0.9;
+    }
+
+    @media (max-width: 768px) {
+        .post-content-body img {
+            border-radius: 4px;
+            margin: 1rem auto;
+        }
+    }
+    .post-content-body {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .post-content-body table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        border-collapse: collapse;
+    }
+
+    .comment-section {
+        font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        color: #2c3e50;
+    }
+
+    .comment-item {
+        background: #ffffff;
+        padding: 24px !important;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f0f0f0;
+        transition: transform 0.2s ease;
+    }
+    .comment-item:hover{
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    .comment-item .comment-text {
+        font-size: 1.05rem !important;
+        line-height: 1.7;
+        color: #444;
+        margin-top: 10px;
+    }
+    .comment-item strong{
+        font-size: 1.1rem;
+        color: #34495e;
+    }
+    
+    .replies-container {
+        margin-left: 30px !important;
+        border-left: 3px solid #ebedef !important;
+        padding-left: 20px !important;
+    }
+
+    .comment-form-container {
+        background: #fdfdfe;
+        padding: 25px;
+        border-radius: 16px;
+        border: 1px dashed #d1d8e0;
+        margin-top: 50px;
+    }
+
+    .comment-form-container h4 {
+        font-size: 1.25rem;
+        margin-bottom: 20px;
+        color: #2c3e50;
+    }
+
+    #ajax-comment-form textarea{
+        width: 100%;
+        min-height: 120px;
+        padding: 15px;
+        font-size: 1rem;
+        font-family: inherit;
+        border: 2px solid #edeff2;
+        border-radius: 12px;
+        background-color: #f8f9fa;
+        transition: all 0.3s ease;
+        resize: vertical;
+        box-sizing: border-box;
+    }
+
+    #ajax-comment-form textarea:focus {
+        outline: none;
+        border-color: #3498db;
+        background-color: #fff;
+        box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+    }
+
+    .comment-submit-btn {
+        background: #2c3e50 !important;
+        color: white !important;
+        border: none !important;
+        padding: 10px 25px !important;
+        border-radius: 25px !important;
+        font-weight: 600 !important;
+        cursor: pointer;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .comment-submit-btn:hover {
+        background: #34495e !important;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+
+    .comment-submit-btn:disabled {
+        background: #bdc3c7 !important;
+        cursor: not-allowed;
+    }
+
+    #cancel-reply-btn {
+        font-size: 0.9rem;
+        margin-left: 15px;
+        color: #e74c3c !important;
+        text-decoration: underline;
+    }
+    #ajax-comment-form label {
+        display: none;
+    }
+
+</style>
 <article class="post-detail">
     <header class="post-header" style="margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -64,6 +200,32 @@
     <div class="post-content-body" style="font-size: 1.1rem; line-height: 1.8; color: #34495e;">
         {{ post.text|markdown }}
     </div>
+
+    {% if post.attachments.all %}
+    <div class="post-attachments"
+        style="margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 8px; border: 1px solid #eee;">
+        <h4
+            style="margin-top: 0; color: #2c3e50; font-size: 1.1rem; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 15px;">
+            📎 附件下载
+        </h4>
+        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 12px;">
+            {% for attachment in post.attachments.all %}
+            <li
+                style="background: white; border: 1px solid #dcdde1; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: transform 0.2s;">
+                <a href="{{ attachment.file.url }}" target="_blank"
+                    style="text-decoration: none; color: #3498db; display: flex; align-items: center; font-size: 0.9rem;">
+                    <i class="fa fa-file-download" style="margin-right: 8px;"></i>
+                    {{ attachment.file.name|cut:'blog_attachments/' }}
+                    <span style="color: #95a5a6; margin-left: 8px; font-size: 0.8rem;">
+                        ({{ attachment.file.size|filesizeformat }})
+                    </span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
 </article>
 
 <section class="comment-section" id="comments" style="margin-top: 60px; max-width: 800px;">
@@ -82,21 +244,30 @@
     {% endfor %}
 
     {% if perms.blog.add_comment or user.is_superuser %}
-    <div class="comment-form-container" id="reply-box" style="margin-top: 40px;">
+    <div class="comment-form-container" id="reply-box">
         <h4 id="form-title">✍️ 发表你的看法</h4>
         <form method="POST" class="post-form" id="ajax-comment-form">
             {% csrf_token %}
             <input type="hidden" name="parent_id" id="parent_id_input" value="">
-            {{ form.as_p }}
-            <div style="display: flex; justify-content: space-between;">
+    
+            <div class="comment-input-wrapper">
+                {{ form.text }}
+            </div>
+    
+            <div class="form-actions" style="display: flex; align-items: center; gap: 15px; margin-top: 10px;">
                 <button type="submit" class="comment-submit-btn">提交评论</button>
                 <button type="button" id="cancel-reply-btn" onclick="resetForm()"
-                    style="display:none; background:none; border:none; color:#95a5a6; cursor:pointer;">取消回复</button>
+                    style="display:none; background: #f1f2f6; color: #636e72; border: none; padding: 10px 20px; border-radius: 25px; font-weight: 500; cursor: pointer; transition: all 0.3s;">取消回复</button>
             </div>
         </form>
     </div>
     {% endif %}
 </section>
+
+<div id="image-overlay"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; cursor:zoom-out; align-items:center; justify-content:center;">
+    <img id="overlay-img" style="max-width:95%; max-height:95%; object-fit:contain; transition: transform 0.3s ease;">
+</div>
 
 <script>
     function prepareReply(id, username) {
@@ -188,8 +359,7 @@
                         <strong style="color: #2c3e50;">${data.author_nickname} <span style="font-weight: normal; color: #95a5a6; font-size: 0.8rem;">(刚刚)</span></strong>
                         <small style="color: #bdc3c7;">${data.created_date}</small>
                     </div>
-                    <div style="color: #5d6d7e; line-height: 1.6;">
-                        ${data.parent_id ? `<span style="color: #3498db; font-size: 0.9em;">@${data.author_username} </span>` : ''}
+                        <div class="comment-text">  ${data.parent_id ? `<span style="color: #3498db; font-size: 0.9em;">@${data.author_username} </span>` : ''}
                         <span>${data.text}</span>
                     </div>
                     <div style="margin-top: 10px; font-size: 0.85rem; color: #3498db;">
@@ -247,6 +417,31 @@
                         submitBtn.disabled = false;
                         submitBtn.innerText = "提交评论";
                     });
-            });
+        });
+        document.addEventListener('DOMContentLoaded', function () {
+                const overlay = document.getElementById('image-overlay');
+                const overlayImg = document.getElementById('overlay-img');
+                const contentBody = document.querySelector('.post-content-body');
+
+                if (contentBody) {
+                    contentBody.addEventListener('click', function (e) {
+                        if (e.target.tagName === 'IMG') {
+                            overlayImg.src = e.target.src;
+                            overlay.style.display = 'flex';
+                            document.body.style.overflow = 'hidden';
+                        }
+                    });
+                }
+                overlay.addEventListener('click', function () {
+                    overlay.style.display = 'none';
+                    overlayImg.src = '';
+                    document.body.style.overflow = 'auto';
+                });
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape' && overlay.style.display === 'flex') {
+                        overlay.click();
+                    }
+                });
+        });
 </script>
 {% endblock %}

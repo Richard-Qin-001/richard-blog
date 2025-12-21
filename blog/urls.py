@@ -14,4 +14,6 @@ urlpatterns = [
     path('tag/<str:tag_name>/', views.post_list, name='post_list_by_tag'),
     path('tag/<int:pk>/delete/', views.tag_delete, name='tag_delete'),
     path('profile/edit/', views.profile_edit, name='profile_edit'),
+    path('attachment/<int:pk>/delete/', views.attachment_delete, name='attachment_delete'),
+    path('api/image/upload/', views.api_image_upload, name='api_image_upload'),
 ]

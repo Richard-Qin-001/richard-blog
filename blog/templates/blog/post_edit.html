@@ -167,6 +167,19 @@
         align-items: center;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     }
+    
+    .delete-attachment {
+    margin-left: 10px;
+    color: #e74c3c;
+    cursor: pointer;
+    font-weight: bold;
+    padding: 0 5px;
+    }
+    .delete-attachment:hover {
+        background: #fdeaea;
+        border-radius: 50%;
+    }
+
 </style>
 
 <div class="container" style="max-width: 900px;">
@@ -200,6 +213,15 @@
                     <input type="file" name="attachments" id="file-input" multiple style="display: none;">
                 </div>
                 <div id="file-list" class="file-preview-list"></div>
+
+                <div id="existing-attachments" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 10px;">
+                    {% for attachment in form.instance.attachments.all %}
+                    <div class="file-preview-item" id="att-{{ attachment.pk }}">
+                        📎 {{ attachment.file.name|cut:'blog_attachments/' }}
+                        <span class="delete-attachment" onclick="deleteAttachment({{ attachment.pk }})">×</span>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
 
             <div class="form-section">
@@ -254,20 +276,86 @@
 
         dropZone.onclick = () => fileInput.click();
 
+        function uploadImage(file) {
+            let formData = new FormData();
+            formData.append('image', file);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            const cm = simplemde.codemirror;
+            const cursor = cm.getCursor();
+            const placeholder = `![上传中...](uploading_${Math.random().toString(36).substr(2, 5)})`;
+
+            cm.replaceRange(placeholder, cursor);
+
+            $.ajax({
+                url: "{% url 'api_image_upload' %}",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (data) {
+                    if (data.success) {
+                        const content = cm.getValue();
+                        const newContent = content.replace(placeholder, `![图片](${data.url})`);
+                        cm.setValue(newContent);
+                    }
+                },
+                error: function (data) {
+                    if(data.error) {
+                        alert("图片上传失败!")
+                        const content = cm.getValue();
+                        cm.setValue(content.replace(placeholder, "[图片上传失败]"));
+                    }
+                }
+            });
+        }
+
+
         fileInput.onchange = function () {
             fileList.innerHTML = '';
             for (let file of this.files) {
-                const item = document.createElement('div');
-                item.className = 'file-preview-item';
-                item.innerHTML = `📎 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
-                fileList.appendChild(item);
 
                 if (file.type.startsWith('image/')) {
-                    const pos = simplemde.codemirror.getCursor();
-                    simplemde.codemirror.replaceRange(`![${file.name}](上传后将替换为实际链接)`, pos);
+                    uploadImage(file);
+                }
+                else {
+                    const item = document.createElement('div');
+                    item.className = 'file-preview-item';
+                    item.innerHTML = `📎 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                    fileList.appendChild(item);
                 }
             }
         };
+        simplemde.codemirror.on("paste", function(editor, e){
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf("image") !== -1) {
+                    const file = items[i].getAsFile();
+                    uploadImage(file);
+                }
+            }
+        });
     });
+    function deleteAttachment(attId) {
+            if (confirm('确定要永久删除这个附件吗？')) {
+                $.ajax({
+                    url: `/attachment/${attId}/delete/`,
+                    type: 'POST',
+                    data: {
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function (response) {
+                        if (response.status === 'ok') {
+                            $(`#att-${attId}`).fadeOut();
+                        } else {
+                            alert('删除失败：' + response.message);
+                        }
+                    },
+                    error: function () {
+                        alert('服务器错误，请稍后再试');
+                    }
+                });
+            }
+        }
 </script>
 {% endblock %}

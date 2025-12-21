@@ -9,9 +9,9 @@
             <small style="color: #bdc3c7;">{{ node.created_date|date:"Y-m-d H:i" }}</small>
         </div>
 
-        <div style="color: #5d6d7e;">
+        <div class="comment-text">
             {% if node.parent %}
-            <span style="color: #3498db; font-size: 0.9em;">@{{ node.parent.author.username }}</span>
+                <span style="color: #3498db; font-weight: 500;">@{{ node.parent.author.username }}</span>
             {% endif %}
             <span id="text-content-{{ node.id }}">{{ node.text|linebreaks }}</span>
         </div>

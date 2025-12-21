@@ -97,3 +97,11 @@ def create_user_profile(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
+
+class Attachment(models.Model):
+    post = models.ForeignKey(Post, related_name='attachments', on_delete=models.CASCADE, null=True, blank=True)
+    file = models.FileField(upload_to='attachments/%Y/%m/%d/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.file.name

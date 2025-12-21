@@ -6,6 +6,13 @@
     box-sizing: border-box;
 }
 
+.container img,
+.container table,
+.container pre {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
 body {
     margin: 0;
     font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
