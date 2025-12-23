@@ -37,12 +37,32 @@
                 </div>
             </div>
 
-            {% if user == profile_user %}
-            <a href="{% url 'profile_edit' %}"
-                style="display: block; margin-top: 25px; background: #3498db; color: white; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: 600; transition: 0.3s;">
-                ⚙️ 编辑个人资料
-            </a>
-            {% endif %}
+            <div style="margin-top: 25px; display: flex; flex-direction: column; gap: 10px;">
+                {% if user.is_authenticated and user != profile_user %}
+                    <a href="{% url 'send_message' profile_user.id %}"
+                        style="display: block; background: #2ecc71; color: white; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: 600; transition: 0.3s; border: none; cursor: pointer;">
+                        ✉️ 发送私信
+                    </a>
+                {% endif %}
+            
+                {% if user == profile_user %}
+                    <a href="{% url 'inbox' %}"
+                        style="display: block; background: #f3f4f6; color: #374151; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: 600; transition: 0.3s;">
+                        📬 我的信箱
+                    {% if unread_msg_count > 0 %}
+                        <span
+                            style="background: #e74c3c; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; margin-left: 5px;">
+                            $unread_msg_count$
+                        </span>
+                    {% endif %}
+                    </a>
+                
+                    <a href="{% url 'profile_edit' %}"
+                        style="display: block; background: #3498db; color: white; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: 600; transition: 0.3s;">
+                        ⚙️ 编辑个人资料
+                    </a>
+                {% endif %}
+            </div>
         </div>
     </aside>
 

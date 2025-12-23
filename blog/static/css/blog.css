@@ -260,17 +260,23 @@ header .container {
     margin-bottom: 20px;
 }
 
-.post-form input[type="text"],
 .post-form textarea {
     width: 100%;
     padding: 15px;
     border: 1px solid #dcdde1;
     border-radius: 8px;
     box-sizing: border-box;
+    min-height: 400px;
+    font-family: inherit;
 }
 
-.post-form textarea {
-    min-height: 400px;
+.post-form input[name="title"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #dcdde1;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 1.1rem;
 }
 
 #post-like-btn {
@@ -344,6 +350,23 @@ header .container {
 .tag-delete-link:hover {
     background-color: #e74c3c;
     color: white !important;
+}
+
+.page-link {
+    background: rgba(52, 152, 219, 0.9);
+    color: white !important;
+    padding: 6px 15px;
+    border-radius: 15px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: all 0.3s;
+    backdrop-filter: blur(5px);
+}
+
+.page-link:hover {
+    background: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 

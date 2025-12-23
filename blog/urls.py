@@ -16,4 +16,7 @@ urlpatterns = [
     path('profile/edit/', views.profile_edit, name='profile_edit'),
     path('attachment/<int:pk>/delete/', views.attachment_delete, name='attachment_delete'),
     path('api/image/upload/', views.api_image_upload, name='api_image_upload'),
+    path('message/inbox/', views.inbox, name='inbox'),
+    path('message/view/<int:pk>', views.message_detail, name='message_detail'),
+    path('message/send/<int:recipient_id>', views.send_message, name='send_message'),
 ]

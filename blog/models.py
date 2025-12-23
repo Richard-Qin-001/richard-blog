@@ -105,3 +105,18 @@ class Attachment(models.Model):
 
     def __str__(self):
         return self.file.name
+
+class Message(models.Model):
+    sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
+    recipient = models.ForeignKey(User, related_name='received_messages', on_delete=models.CASCADE)
+    subject = models.CharField(max_length=200)
+    body = models.TextField()
+    sent_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+    deleted_by_sender = models.BooleanField(default=False)
+    deleted_by_recipient = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-sent_at']
+    def __str__(self):
+        return f"{self.sender} -> {self.recipient}: {self.subject}"

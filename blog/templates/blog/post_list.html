@@ -8,7 +8,7 @@
     <div
         style="background: #ebf5fb; border-left: 4px solid #3498db; padding: 15px 20px; border-radius: 8px; margin-bottom: 25px;">
         <h3 style="margin: 0; color: #2c3e50; font-size: 1.1rem;">🔍 搜索结果： "{{ query }}"</h3>
-        <p style="margin: 5px 0 0; color: #5d6d7e; font-size: 0.9rem;">共找到 $ {{ posts.count }} $ 篇文章 · <a
+        <p style="margin: 5px 0 0; color: #5d6d7e; font-size: 0.9rem;">共找到 $ {{ page_obj.paginator.count }} $ 篇文章 · <a
                 href="{% url 'post_list' %}" style="color: #3498db; text-decoration: none;">清除搜索</a></p>
     </div>
     {% endif %}
@@ -23,9 +23,9 @@
     {% endif %}
 
     <div class="post-feed">
-        {% for post in posts %}
+        {% for post in page_obj %}
         <article class="post-card"
-            style="background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 25px; margin-bottom: 30px; border: 1px solid #f0f0f0; transition: transform 0.2s ease;">
+            style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 25px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.3); transition: transform 0.2s ease;">
 
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -78,12 +78,38 @@
         </article>
 
         {% empty %}
-        <div style="text-align: center; padding: 80px 0; background: white; border-radius: 15px;">
+        <div style="text-align: center; padding: 80px 0; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border-radius: 15px;">
             <p style="font-size: 4rem; margin-bottom: 20px;">😅</p>
             <p style="font-size: 1.2rem; color: #bdc3c7;">抱歉，没有找到相关文章</p>
             <a href="{% url 'post_list' %}" style="color: #3498db; text-decoration: underline;">返回主页</a>
         </div>
         {% endfor %}
+
+        {% if page_obj.has_other_pages %}
+            <div class="pagination"
+                style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 40px; padding-bottom: 40px;">
+            
+                {% if page_obj.has_previous %}
+                    <a href="?page=1{% if query %}&q={{ query }}{% endif %}{% if tag %}&tag={{ tag.name }}{% endif %}"
+                        class="page-link">首页</a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if tag %}&tag={{ tag.name }}{% endif %}"
+                        class="page-link">上一页</a>
+                {% endif %}
+            
+                <span
+                    style="background: rgba(255,255,255,0.8); padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; color: #2c3e50;">
+                    第 $ {{ page_obj.number }} $ 页 / 共 $ {{ page_obj.paginator.num_pages }} $ 页
+                </span>
+            
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if tag %}&tag={{ tag.name }}{% endif %}"
+                        class="page-link">下一页</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if tag %}&tag={{ tag.name }}{% endif %}"
+                        class="page-link">末页</a>
+                {% endif %}
+        
+            </div>
+        {% endif %}
     </div>
 </div>
 

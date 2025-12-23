@@ -1,0 +1,58 @@
+{% extends 'blog/base.html' %}
+
+{% block content %}
+<div class="container" style="max-width: 800px; margin: 40px auto; padding: 0 20px;">
+    <div class="post-form-card"
+        style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+
+        <div style="border-bottom: 2px solid #f8f9fa; padding-bottom: 20px; margin-bottom: 25px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <h2 style="margin: 0; color: #2c3e50; font-size: 1.5rem;">{{ message.subject }}</h2>
+                <span style="color: #95a5a6; font-size: 0.85rem;">{{ message.sent_at|date:"Y-m-d H:i" }}</span>
+            </div>
+
+            <div style="margin-top: 15px; display: flex; align-items: center; gap: 10px;">
+                <img src="{{ message.sender.profile.avatar.url }}"
+                    style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                <div>
+                    <strong style="color: #34495e; display: block;">{{message.sender.profile.nickname|default:message.sender.username }}</strong>
+                    <span style="color: #bdc3c7; font-size: 0.8rem;">发件人 @{{ message.sender.username }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="min-height: 150px; line-height: 1.6; color: #2c3e50; font-size: 1.05rem; white-space: pre-wrap;">
+            {{ message.body }}
+        </div>
+
+        <div
+            style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; display: flex; gap: 15px; align-items: center;">
+        
+            {% if message.recipient == user %}
+            <a href="{% url 'send_message' message.sender.id %}?subject=回复: {{ message.subject }}"
+                style="background: #2ecc71; color: white; text-decoration: none; padding: 10px 25px; border-radius: 8px; font-weight: bold; transition: 0.3s;">
+                ↩️ 回复消息
+            </a>
+            {% else %}
+            <a href="{% url 'send_message' message.recipient.id %}"
+                style="background: #3498db; color: white; text-decoration: none; padding: 10px 25px; border-radius: 8px; font-weight: bold; transition: 0.3s;">
+                ✉️ 再次联系
+            </a>
+            {% endif %}
+        
+            <a href="{% url 'inbox' %}"
+                style="background: #f8f9fa; color: #7f8c8d; text-decoration: none; padding: 10px 25px; border-radius: 8px; font-weight: bold; transition: 0.3s; border: 1px solid #dcdde1;">
+                返回信箱
+            </a>
+        
+            <form action="" method="POST" style="margin-left: auto;">
+                {% csrf_token %}
+                <button type="submit" onclick="return confirm('确定要从你的信箱中删除这条记录吗？')"
+                    style="background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 0.9rem;">
+                    🗑️ 删除记录
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

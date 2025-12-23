@@ -79,6 +79,17 @@
                             </span>
                         </a>
                     </div>
+
+                    <a href="{% url 'inbox' %}" title="站内信箱"
+                        style="color: #ecf0f1; text-decoration: none; font-size: 1.1rem; display: flex; align-items: center; position: relative; margin-left: 10px;">
+                        📬
+                        {% if total_unread_count > 0 %}
+                        <span
+                            style="position: absolute; top: -8px; right: -8px; background: #e74c3c; color: white; border-radius: 50%; padding: 2px 5px; font-size: 0.6rem; font-weight: bold; border: 1px solid #2c3e50; line-height: 1; min-width: 12px; text-align: center;">
+                            {{ total_unread_count }}
+                        </span>
+                        {% endif %}
+                    </a>
         
                     <a href="{% url 'user_list' %}" title="社区成员"
                         style="color: #4db6ac; text-decoration: none; font-size: 1.1rem; display: flex; align-items: center; margin-left: 5px;">

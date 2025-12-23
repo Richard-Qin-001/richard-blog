@@ -1,0 +1,151 @@
+{% extends 'blog/base.html' %}
+
+{% block content %}
+<div class="container" style="max-width: 900px; margin: 30px auto; padding: 0 20px;">
+    <div class="post-form-card"
+        style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <h2
+            style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #f8f9fa; padding-bottom: 15px; margin-bottom: 20px;">
+            📬 个人信箱</h2>
+
+        <nav style="display: flex; gap: 30px; border-bottom: 2px solid #f8f9fa; margin-bottom: 20px;">
+            <div id="tab-received" onclick="switchMailTab('received')"
+                style="padding-bottom: 10px; color: #3498db; border-bottom: 3px solid #3498db; font-weight: bold; cursor: pointer;">
+                📥 收到的消息
+            </div>
+        
+            <div id="tab-replies" onclick="switchMailTab('replies')"
+                style="padding-bottom: 10px; color: #95a5a6; border-bottom: 3px solid transparent; font-weight: bold; cursor: pointer; position: relative;">
+                🔔 评论提醒
+                {% if unread_comment_count > 0 %}
+                <span
+                    style="background: #e74c3c; color: white; padding: 1px 5px; border-radius: 10px; font-size: 0.6rem; margin-left: 3px;">
+                    {{ unread_comment_count }}
+                </span>
+                {% endif %}
+            </div>
+        
+            <div id="tab-sent" onclick="switchMailTab('sent')"
+                style="padding-bottom: 10px; color: #95a5a6; border-bottom: 3px solid transparent; font-weight: bold; cursor: pointer;">
+                📤 已发送
+            </div>
+        </nav>
+
+        <div id="content-received" class="mail-tab-content">
+            {% for msg in received_messages %}
+            <a href="{% url 'message_detail' msg.pk %}" style="text-decoration: none; color: inherit;">
+                <div
+                    style="padding: 15px; border-bottom: 1px solid #f1f2f6; display: flex; align-items: center; gap: 15px; {% if not msg.is_read %}background-color: #f0f7ff;{% endif %} transition: 0.2s;">
+                    <img src="{{ msg.sender.profile.avatar.url }}"
+                        style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <strong style="color: #2c3e50;">{{ msg.sender.profile.nickname|default:msg.sender.username}}</strong>
+                            <span style="font-size: 0.8rem; color: #95a5a6;">{{ msg.sent_at|date:"Y-m-d H:i" }}</span>
+                        </div>
+                        <div style="font-size: 0.9rem; color: #34495e; margin-top: 4px;">{{ msg.subject }}</div>
+                    </div>
+                </div>
+            </a>
+            {% empty %}
+            <p style="text-align: center; color: #bdc3c7; padding: 40px 0;">收件箱空空如也</p>
+            {% endfor %}
+        </div>
+
+        <div id="content-replies" class="mail-tab-content" style="display: none;">
+            {% for reply in unread_replies %}
+            <div style="padding: 15px; border-bottom: 1px solid #f1f2f6; transition: 0.2s; 
+                        {% if not reply.is_read %}background-color: #fffaf0; border-left: 4px solid #f39c12;{% endif %}">
+                <div style="font-size: 0.85rem; margin-bottom: 5px;">
+                    <strong>{{ reply.author.profile.nickname|default:reply.author.username }}</strong>
+        
+                    {% if reply.parent and reply.parent.author == user %}
+                    回复了你的评论，在文章 <a href="{% url 'post_detail' pk=reply.post.pk %}#comment-{{ reply.id }}"
+                        style="color: #3498db; font-weight: bold; text-decoration: none;">《{{ reply.post.title }}》</a> 中：
+                    {% else %}
+                    评论了你的文章 <a href="{% url 'post_detail' pk=reply.post.pk %}#comment-{{ reply.id }}"
+                        style="color: #3498db; font-weight: bold; text-decoration: none;">《{{ reply.post.title }}》</a>：
+                    {% endif %}
+        
+                    {% if not reply.is_read %}
+                    <span
+                        style="background: #e74c3c; color: white; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 5px;">NEW</span>
+                    {% endif %}
+                </div>
+        
+                <div
+                    style="color: #4a5568; font-size: 0.9rem; font-style: italic; padding-left: 10px; border-left: 2px solid #cbd5e0; margin: 8px 0;">
+                    "{{ reply.text|truncatechars:100 }}"
+                </div>
+                <div style="font-size: 0.75rem; color: #a0aec0;">📅 {{ reply.created_date|date:"Y-m-d H:i" }}</div>
+            </div>
+            {% empty %}
+            <p style="text-align: center; color: #bdc3c7; padding: 40px 0;">暂无评论或回复记录</p>
+            {% endfor %}
+        </div>
+
+        <div id="content-sent" class="mail-tab-content" style="display: none;">
+            {% for msg in sent_messages %}
+            <a href="{% url 'message_detail' msg.pk %}" style="text-decoration: none; color: inherit;">
+                <div
+                    style="padding: 15px; border-bottom: 1px solid #f1f2f6; display: flex; align-items: center; gap: 15px; transition: 0.2s;">
+                    <img src="{{ msg.recipient.profile.avatar.url }}"
+                        style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <strong style="color: #2c3e50;">发给: {{msg.recipient.profile.nickname|default:msg.recipient.username }}</strong>
+                            <span style="font-size: 0.8rem; color: #95a5a6;">{{ msg.sent_at|date:"Y-m-d H:i" }}</span>
+                        </div>
+                        <div style="font-size: 0.9rem; color: #34495e; margin-top: 4px;">{{ msg.subject }}</div>
+                    </div>
+                </div>
+            </a>
+            {% empty %}
+            <p style="text-align: center; color: #bdc3c7; padding: 40px 0;">你还没有发送过消息</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchMailTab(type) {
+            document.querySelectorAll('.mail-tab-content').forEach(el => el.style.display = 'none');
+            document.getElementById('content-' + type).style.display = 'block';
+
+            const tabs = ['received', 'sent', 'replies'];
+            tabs.forEach(t => {
+                const tabEl = document.getElementById('tab-' + t);
+                if (tabEl) {
+                    tabEl.style.color = '#95a5a6';
+                    tabEl.style.borderBottomColor = 'transparent';
+                }
+            });
+            const activeTab = document.getElementById('tab-' + type);
+            if (activeTab) {
+                activeTab.style.color = '#3498db';
+                activeTab.style.borderBottomColor = '#3498db';
+            }
+        }
+</script>
+
+<style>
+    .mail-tab-content {
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(5px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .mail-tab-content a div:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}

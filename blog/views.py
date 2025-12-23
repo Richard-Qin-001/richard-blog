@@ -1,9 +1,10 @@
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
-from .models import Post, Tag, Profile, Attachment
+from .models import Post, Tag, Profile, Attachment, Message
 from .forms import CommentForm, SignupForm, PostForm, Comment, ProfileForm
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.core.paginator import Paginator
 from django.contrib.auth import login
 from django.contrib.auth.decorators import permission_required, login_required
 from django.contrib.auth.models import Group, User
@@ -17,6 +18,7 @@ from datetime import timedelta
 
 def post_list(request, tag_name = None):
     query = request.GET.get('q')
+    tag = None
     posts = Post.objects.filter(published_date__lte=timezone.now())
 
     if tag_name:
@@ -24,8 +26,15 @@ def post_list(request, tag_name = None):
         posts = posts.filter(tags=tag)
     if query:
         posts = posts.filter(Q(title__icontains=query) | Q(text__icontains=query), published_date__isnull=False).distinct()
-    posts = posts.order_by('published_date')
-    return render(request, 'blog/post_list.html', {'posts' : posts})
+    posts = posts.order_by('-published_date')
+    paginator = Paginator(posts, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'blog/post_list.html', {
+        'page_obj': page_obj,
+        'query':query,
+        'tag': tag,
+        })
 
 @staff_member_required
 def tag_delete(request, pk):
@@ -292,3 +301,56 @@ def profile_public(request, username):
         'comment_count': comment_count,
         'activity_data': activity_data,
     })
+
+@login_required
+def inbox(request):
+    received_messages = Message.objects.filter(recipient=request.user, deleted_by_recipient=False)
+    sent_messages = Message.objects.filter(sender=request.user, deleted_by_sender=False)
+    all_replies_qs = Comment.objects.filter(
+        Q(post__author=request.user) | Q(parent__author=request.user)
+    ).exclude(author=request.user).distinct().order_by('-created_date')
+    replies_list = list(all_replies_qs)
+    all_replies_qs.filter(is_read=False).update(is_read=True)
+    return render(request, 'user/inbox.html', {
+        'received_messages' : received_messages,
+        'sent_messages' : sent_messages,
+        'unread_replies': replies_list,
+    })
+
+@login_required
+def message_detail(request, pk):
+    msg_obj = get_object_or_404(Message, pk = pk)
+    if msg_obj.sender != request.user and msg_obj.recipient != request.user:
+        return redirect('inbox')
+    
+    if request.method == "POST":
+        if msg_obj.sender == request.user:
+            msg_obj.deleted_by_sender = True
+        if msg_obj.recipient == request.user:
+            msg_obj.deleted_by_recipient = True
+        
+        msg_obj.save()
+        if msg_obj.deleted_by_sender and msg_obj.deleted_by_recipient:
+            msg_obj.delete()
+            
+        return redirect('inbox')
+
+    if msg_obj.recipient == request.user and not msg_obj.is_read:
+        msg_obj.is_read = True
+        msg_obj.save()
+    return render(request, "user/message_detail.html", {'message' : msg_obj})
+
+@login_required
+def send_message(request, recipient_id):
+    recipient   = get_object_or_404(User, id=recipient_id)
+    if request.method == "POST":
+        subject = request.POST.get('subject')
+        body = request.POST.get('body')
+        Message.objects.create(
+            sender=request.user, 
+            recipient=recipient, 
+            subject=subject, 
+            body=body
+        )
+        return redirect('inbox')
+    return render(request, 'user/send_message.html', {'recipient': recipient})
