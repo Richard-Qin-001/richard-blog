@@ -120,3 +120,15 @@ class Message(models.Model):
         ordering = ['-sent_at']
     def __str__(self):
         return f"{self.sender} -> {self.recipient}: {self.subject}"
+    
+class Contact(models.Model):
+    user_from = models.ForeignKey(User, related_name='rel_from_set', on_delete=models.CASCADE)
+    user_to = models.ForeignKey(User, related_name='rel_to_set', on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created']
+        unique_together = ('user_from', 'user_to')
+    
+    def __str__(self):
+        return f"{self.user_from} 关注了 {self.user_to}"

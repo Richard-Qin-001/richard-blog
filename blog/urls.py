@@ -19,4 +19,5 @@ urlpatterns = [
     path('message/inbox/', views.inbox, name='inbox'),
     path('message/view/<int:pk>', views.message_detail, name='message_detail'),
     path('message/send/<int:recipient_id>', views.send_message, name='send_message'),
+    path('user/following/posts/', views.following_posts, name='following_posts'),
 ]

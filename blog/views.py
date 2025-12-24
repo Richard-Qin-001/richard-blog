@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
-from .models import Post, Tag, Profile, Attachment, Message
+from .models import Post, Tag, Profile, Attachment, Message, Contact
 from .forms import CommentForm, SignupForm, PostForm, Comment, ProfileForm
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -14,6 +14,7 @@ from django.http import JsonResponse
 from django.db.models import Q, Count
 from django.db.models.functions import TruncDay
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from datetime import timedelta
 
 def post_list(request, tag_name = None):
@@ -87,6 +88,19 @@ def post_new(request):
             post.published_date = timezone.now()
             post.save()
             form.save()
+
+            followers = Contact.objects.filter(user_to=request.user).select_related('user_from')
+            notifications = [
+                Message(
+                    sender = request.user,
+                    recipient = follower.user_from,
+                    subject = '🔔 你关注的博主发布了新文章',
+                    body = f"你关注的博主 {request.user.profile.nickname or request.user.username} 发布了新文章：《{post.title}》。快去看看吧！",
+                )
+                for follower in followers
+            ]
+            Message.objects.bulk_create(notifications)
+
             files = request.FILES.getlist('attachments')
             for f in files:
                 Attachment.objects.create(post=post, file=f)
@@ -266,6 +280,12 @@ def profile_public(request, username):
     posts = Post.objects.filter(author=profile_user).order_by('-published_date')
     comment_count = Comment.objects.filter(author=profile_user).count()
     recent_comments = Comment.objects.filter(author=profile_user).select_related('post').order_by('-created_date')[:10]
+    is_following = False
+    if request.user.is_authenticated:
+        is_following = Contact.objects.filter(user_from=request.user, user_to=profile_user).exists()
+    
+    followers_count = profile_user.rel_to_set.count()
+    following_count = profile_user.rel_from_set.count()
 
     unread_replies = []
     if request.user == profile_user:
@@ -300,6 +320,9 @@ def profile_public(request, username):
         'unread_replies': unread_replies,
         'comment_count': comment_count,
         'activity_data': activity_data,
+        'is_following' : is_following,
+        'followers_count' : followers_count,
+        'following_count' : following_count,
     })
 
 @login_required
@@ -354,3 +377,32 @@ def send_message(request, recipient_id):
         )
         return redirect('inbox')
     return render(request, 'user/send_message.html', {'recipient': recipient})
+
+@login_required
+@require_POST
+def user_follow(request):
+    user_id = request.POST.get('id')
+    action = request.POST.get('action')
+    if user_id and action:
+        try:
+            target_user = User.objects.get(id=user_id)
+            if action == 'follow':
+                contact, create = Contact.objects.get_or_create(user_from=request.user, user_to=target_user)
+                if create:
+                    Message.objects.create(sender=request.user, 
+                        recipient=target_user, 
+                        subject="🌟 你增加了一个新粉丝",
+                        body=f"用户 {request.user.profile.nickname or request.user.username} 刚刚关注了你！")
+
+            else:
+                Contact.objects.filter(user_from=request.user, user_to=target_user).delete()
+            return JsonResponse({'status': 'ok'})
+        except User.DoesNotExist:
+            return JsonResponse({'status': 'error'})
+    return JsonResponse({'status': 'error'})
+
+@login_required
+def following_posts(request):
+    following_ids = Contact.objects.filter(user_from=request.user).values_list('user_to', flat=True)
+    posts = Post.objects.filter(author_id__in=following_ids, published_date__isnull=False).order_by('-published_date')
+    return render(request, 'user/following_posts.html', {'posts' : posts})

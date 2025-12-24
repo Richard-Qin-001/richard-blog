@@ -30,4 +30,5 @@ urlpatterns = [
     path('', include('blog.urls')),
     path('users/', views.user_list, name='user_list'),
     path('users/<str:username>/', views.profile_public, name='profile_public'),
+    path('user/follow/', views.user_follow, name='user_follow'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -43,6 +43,15 @@
                         style="display: block; background: #2ecc71; color: white; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: 600; transition: 0.3s; border: none; cursor: pointer;">
                         ✉️ 发送私信
                     </a>
+
+                    <div style="margin: 15px 0;">
+                        <button id="follow-btn" data-id="{{ profile_user.id }}"
+                            data-action="{% if is_following %}unfollow{% else %}follow{% endif %}" style="padding: 8px 20px; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s;
+                                           background-color: {% if is_following %}#e1e4e8{% else %}#3498db{% endif %};
+                                           color: {% if is_following %}#24292e{% else %}white{% endif %};">
+                            {% if is_following %}取消关注{% else %}关注TA{% endif %}
+                        </button>
+                    </div>
                 {% endif %}
             
                 {% if user == profile_user %}
@@ -62,6 +71,10 @@
                         ⚙️ 编辑个人资料
                     </a>
                 {% endif %}
+                <div style="margin-top: 10px; font-size: 0.9rem; color: #666;">
+                    <span><strong>{{ following_count }}</strong> 关注</span> |
+                    <span><strong>{{ followers_count }}</strong> 粉丝</span>
+                </div>
             </div>
         </div>
     </aside>
@@ -227,6 +240,29 @@
             switchTab('posts');
         }
     });
+
+    document.getElementById('follow-btn')?.addEventListener('click', function () {
+            const btn = this;
+            const userId = btn.getAttribute('data-id');
+            const action = btn.getAttribute('data-action');
+
+            fetch("{% url 'user_follow' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `id=${userId}&action=${action}`
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        location.reload();
+                    } else {
+                        alert('操作失败，请重试');
+                    }
+                });
+        });
 </script>
 
 <style>

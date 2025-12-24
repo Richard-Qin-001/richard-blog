@@ -1,0 +1,37 @@
+{% extends 'blog/base.html' %}
+{% load blog_tags %}
+
+{% block content %}
+<div class="container" style="max-width: 800px; margin-top: 30px;">
+    <div style="display: flex; gap: 20px; border-bottom: 2px solid #f1f2f6; margin-bottom: 25px; padding-bottom: 10px;">
+        <a href="{% url 'post_list' %}" style="text-decoration: none; color: #95a5a6; font-weight: bold;">🌍 广场</a>
+        <a href="{% url 'following_posts' %}"
+            style="text-decoration: none; color: #3498db; font-weight: bold; border-bottom: 3px solid #3498db; padding-bottom: 7px;">🌟
+            朋友圈</a>
+        <a href="{% url 'user_list' %}" style="text-decoration: none; color: #95a5a6; font-weight: bold; margin-left: auto;">👥
+            找人</a>
+    </div>
+
+    {% for post in posts %}
+    <article
+        style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+            <img src="{{ post.author.profile.avatar.url }}"
+                style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 12px;">
+            <div>
+                <div style="font-weight: bold; color: #2c3e50;">{{post.author.profile.nickname|default:post.author.username }}</div>
+                <div style="font-size: 0.8rem; color: #bdc3c7;">{{ post.published_date|date:"Y-m-d H:i" }}</div>
+            </div>
+        </div>
+
+        <h2 style="margin: 0 0 10px 0;"><a href="{% url 'post_detail' pk=post.pk %}"
+                style="color: #2c3e50; text-decoration: none;">{{ post.title }}</a></h2>
+        <p style="color: #7f8c8d; font-size: 0.95rem;">{{ post.text|markdown|truncatewords_html:50 }}</p>
+    </article>
+    {% empty %}
+    <div style="text-align: center; padding: 50px 0; color: #bdc3c7;">
+        <p>这里空空如也，快去关注一些有趣的博主吧！</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
