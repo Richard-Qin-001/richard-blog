@@ -1,22 +1,103 @@
 {% extends 'blog/base.html' %}
 
 {% block content %}
-    <div class="login-box" style="max-width: 400px; margin: 50px auto;">
-        <h2>🔑 登录</h2>
-        <form method="post">
-            {% csrf_token %}
-            <div style="margin-bottom: 15px;">
-                <label>账号：</label>
-                <input type="text" name="username" placeholder="用户名 或 电子邮箱" required style="width: 100%; padding: 8px;">
-            </div>
-            <div style="margin-bottom: 15px;">
-                <label>密码：</label>
-                <input type="password" name="password" placeholder="请输入密码" required style="width: 100%; padding: 8px;">
-            </div>
-            <button type="submit" class="btn">登录</button>
-        </form>
-        <p style="margin-top: 15px;">
-            <a href="{% url 'password_recovery' %}" style="color: #e67e22;">忘记密码？使用恢复密钥找回</a>
-        </p>
+<style>
+    .login-container {
+        max-width: 400px;
+        margin: 60px auto;
+        padding: 30px;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        color: #333;
+    }
+
+    .login-container h2 {
+        text-align: center;
+        margin-bottom: 25px;
+        color: #2c3e50;
+        font-size: 1.8rem;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #444;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-size: 1rem;
+    }
+
+    .form-group input:focus {
+        border-color: #3498db;
+        outline: none;
+        box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+    }
+
+    .btn-login {
+        width: 100%;
+        padding: 12px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: background 0.3s;
+        margin-top: 10px;
+    }
+
+    .btn-login:hover {
+        background-color: #2980b9;
+    }
+
+    .login-footer {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 0.9rem;
+        border-top: 1px solid #eee;
+        padding-top: 15px;
+    }
+
+    .login-footer a {
+        color: #e67e22;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .login-footer a:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<div class="login-container">
+    <h2>🔑 登录</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>账号</label>
+            <input type="text" name="username" placeholder="用户名 或 电子邮箱" required>
+        </div>
+        <div class="form-group">
+            <label>密码</label>
+            <input type="password" name="password" placeholder="请输入密码" required>
+        </div>
+        <button type="submit" class="btn-login">立即登录</button>
+    </form>
+
+    <div class="login-footer">
+        <a href="{% url 'password_recovery' %}">忘记密码？使用恢复密钥找回</a>
     </div>
+</div>
 {% endblock %}

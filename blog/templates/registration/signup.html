@@ -1,16 +1,206 @@
 {% extends 'blog/base.html' %}
 
 {% block content %}
-    <div class="signup-box" style="max-width: 400px; margin: 50px auto;">
-        <h2>📝 注册新账号</h2>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <p style="font-size: 0.85rem; color: #7f8c8d;">温馨提示：设置邮箱后，忘记密码时可通过邮箱找回。</p>
-            <button type="submit" class="btn">立即注册</button>
-        </form>
-        <p style="color: #7f8c8d; font-size: 0.9rem; margin-top: 10px;">
-            💡 注册成功后，请前往“编辑资料”查看并保存您的 **16位恢复密钥**，以便找回密码。
-        </p>
+
+{% if messages %}
+    {% for message in messages %}
+        {% if "您的恢复密钥" in message.message or "注册成功" in message.message %}
+            <div id="secure-key-container"
+                style="background: #fff3cd; border: 2px solid #ffeeba; padding: 25px; border-radius: 12px; margin: 20px auto; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; position: relative; z-index: 1000;">
+                <h3 style="color: #856404; margin-top: 0;">🎉 注册成功！请立即保存密钥</h3>
+                <p style="color: #856404; font-size: 0.9rem;">这是您唯一的恢复密钥，离开此页面后将<strong>无法再次查看</strong>：</p>
+
+                <div
+                    style="background: white; padding: 15px; border: 1px dashed #856404; font-family: monospace; font-size: 1.5rem; font-weight: bold; margin: 15px 0; letter-spacing: 2px; position: relative;">
+                    <span id="raw-key">{{ message.message|slice:"-16:" }}</span>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button id="copy-btn" onclick="copyKey()"
+                        style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                        📋 一键复制密钥
+                    </button>
+                    <a href="{% url 'login' %}"
+                        style="background: #856404; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; line-height: 1.2;">
+                        我已保存，去登录
+                    </a>
+                </div>
+                <p id="copy-status" style="margin-top: 10px; font-size: 0.8rem; color: #27ae60; display: none;">✅ 已成功复制到剪贴板！</p>
+            </div>
+
+            <script>
+                function copyKey() {
+                    const keyText = document.getElementById('raw-key').innerText;
+                    const btn = document.getElementById('copy-btn');
+                    const status = document.getElementById('copy-status');
+
+                    navigator.clipboard.writeText(keyText).then(() => {
+                        btn.innerText = "已复制！";
+                        status.style.display = "block";
+                        setTimeout(() => {
+                            btn.innerText = "📋 一键复制密钥";
+                            status.style.display = "none";
+                        }, 3000);
+                    }).catch(err => {
+                        const textArea = document.createElement("textarea");
+                        textArea.value = keyText;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        alert("密钥已复制到剪贴板！");
+                    });
+                }
+            </script>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+<style>
+    .signup-card {
+        max-width: 500px;
+        margin: 40px auto;
+        padding: 30px;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        color: #2c3e50;
+    }
+
+    .signup-card h2 {
+        text-align: center;
+        margin-bottom: 25px;
+        color: #34495e;
+    }
+
+    .form-row {
+        margin-bottom: 18px;
+    }
+
+    .form-row label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .form-row input[type="text"],
+    .form-row input[type="password"],
+    .form-row input[type="email"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-sizing: border-box;
+    }
+
+    .captcha {
+        vertical-align: middle;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+
+    .help-text {
+        font-size: 0.8rem;
+        color: #7f8c8d;
+        margin-top: 4px;
+        line-height: 1.2;
+    }
+
+    .error-list {
+        color: #e74c3c;
+        font-size: 0.85rem;
+        margin-top: 5px;
+        list-style: none;
+        padding-left: 0;
+    }
+
+    .btn-register {
+        width: 100%;
+        padding: 12px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    .btn-register:hover {
+        background-color: #2980b9;
+    }
+
+    .bottom-tips {
+        background: #fdf2f2;
+        padding: 10px;
+        border-radius: 6px;
+        margin-top: 15px;
+        font-size: 0.85rem;
+        border-left: 4px solid #e74c3c;
+    }
+</style>
+
+<div class="signup-card">
+    <h2>📝 注册新账号</h2>
+    <form method="post">
+        {% csrf_token %}
+
+        {% for field in form %}
+        <div class="form-row">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+
+            {% if field.errors %}
+            <ul class="error-list">
+                {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if field.help_text %}
+            <div class="help-text">{{ field.help_text|safe }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <button type="submit" class="btn-register">立即注册</button>
+    </form>
+
+    <div class="bottom-tips">
+        <p>💡 温馨提示：设置邮箱后，忘记密码时可通过邮箱找回。</p>
+        <p>⚠️ 注册成功后，请前往“编辑资料”查看并保存您的 **16位恢复密钥**。</p>
     </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const captchaImg = document.querySelector('img.captcha');
+
+        if (captchaImg) {
+            captchaImg.addEventListener('click', function () {
+                fetch('/captcha/refresh/', {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(res => {
+                        if (!res.ok) {
+                            console.error("服务器返回错误状态:", res.status);
+                            return res.text();
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        captchaImg.src = data.image_url;
+                        const hashField = document.getElementById('id_captcha_0');
+                        if (hashField) {
+                            hashField.value = data.key;
+                        }
+                    })
+                    .catch(err => {
+                        console.error("刷新失败详情:", err);
+                    });
+            });
+        }
+    });
+</script>
 {% endblock %}

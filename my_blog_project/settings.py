@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'blog',
     'django_cleanup.apps.CleanupConfig',
+    'captcha',
 ]
 
 MIDDLEWARE = [
@@ -126,6 +127,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static_root')
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = 'login'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
@@ -134,3 +136,19 @@ AUTHENTICATION_BACKENDS = [
     'blog.backends.EmailOrUsernameBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 10800
+
+CAPTCHA_IMAGE_SIZE = (100, 34)
+CAPTCHA_LENGTH = 4
+CAPTCHA_TIMEOUT = 5
+
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

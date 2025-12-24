@@ -3,6 +3,7 @@ from .models import Comment, Tag, Post, Profile
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
+from captcha.fields import CaptchaField
 
 class CommentForm(forms.ModelForm):
     class Meta:
@@ -20,6 +21,7 @@ class CommentForm(forms.ModelForm):
 class SignupForm(UserCreationForm):
 
     email = forms.EmailField(required=False, help_text="可选。若填写，之后可用邮箱登录")
+    captcha = CaptchaField(label='验证码')
 
     class Meta:
         model = User

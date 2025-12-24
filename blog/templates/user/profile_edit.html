@@ -48,6 +48,60 @@
     }
 </style>
 
+{% if messages %}
+    {% for message in messages %}
+        {% if "您的恢复密钥" in message.message or "新恢复密钥" in message.message %}
+            <div id="secure-key-container"
+                style="background: #fff3cd; border: 2px solid #ffeeba; padding: 25px; border-radius: 12px; margin: 20px auto; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; position: relative; z-index: 1000;">
+                <h3 style="color: #856404; margin-top: 0;">⚠️ 极其重要！请立即保存</h3>
+                <p style="color: #856404; font-size: 0.9rem;">这是您唯一的恢复密钥，离开后将<strong>无法再次查看</strong>：</p>
+
+                <div
+                    style="background: white; padding: 15px; border: 1px dashed #856404; font-family: monospace; font-size: 1.5rem; font-weight: bold; margin: 15px 0; letter-spacing: 2px; position: relative;">
+                    <span id="raw-key">{{ message.message|slice:"-16:" }}</span>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button id="copy-btn" onclick="copyKey()"
+                        style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                        📋 一键复制密钥
+                    </button>
+                    <button onclick="document.getElementById('secure-key-container').remove()"
+                        style="background: #856404; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                        我已保存，关闭
+                    </button>
+                </div>
+                <p id="copy-status" style="margin-top: 10px; font-size: 0.8rem; color: #27ae60; display: none;">✅ 已成功复制到剪贴板！</p>
+            </div>
+
+            <script>
+                function copyKey() {
+                    const keyText = document.getElementById('raw-key').innerText;
+                    const btn = document.getElementById('copy-btn');
+                    const status = document.getElementById('copy-status');
+
+                    navigator.clipboard.writeText(keyText).then(() => {
+                        btn.innerText = "已复制！";
+                        status.style.display = "block";
+                        setTimeout(() => {
+                            btn.innerText = "📋 一键复制密钥";
+                            status.style.display = "none";
+                        }, 3000);
+                    }).catch(err => {
+                        const textArea = document.createElement("textarea");
+                        textArea.value = keyText;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        alert("密钥已复制到剪贴板！");
+                    });
+                }
+            </script>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
 <div class="profile-card">
     <h2 style="text-align: center; margin-bottom: 30px; color: #2c3e50;">👤 编辑个人资料</h2>
 
@@ -77,13 +131,22 @@
         <button type="submit" class="save-btn" style="width: 100%; margin-top: 20px;">保存修改</button>
     </form>
 </div>
+
+
+
 <div
-    style="background-color: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-    <strong style="color: #856404;">🔐 安全提醒：</strong>
-    <p style="font-size: 0.9rem; margin-top: 5px;">
-        您的恢复密钥为：<code
-            style="background: #eee; padding: 2px 5px; font-weight: bold;">{{ user.profile.recovery_key }}</code>
+    style="background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 20px; border-radius: 8px; margin: 30px auto; max-width: 500px;">
+    <strong style="color: #495057;">🔐 账号安全状态</strong>
+    <p style="font-size: 0.9rem; margin: 10px 0; color: #6c757d;">
+        您的恢复密钥处于<strong>加密保护</strong>状态。
     </p>
-    <small style="color: #6c757d;">请妥善保管此密钥。忘记密码时，这是唯一的找回途径（除联系管理员外）。</small>
+
+    <form action="{% url 'regenerate_key' %}" method="POST">
+        {% csrf_token %}
+        <button type="submit" onclick="return confirm('警告：生成新密钥后，旧密钥将失效。请确保您现在有时间记录新密钥。继续吗？')"
+            style="background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 0.9rem;">
+            🔄 重新生成恢复密钥
+        </button>
+    </form>
 </div>
 {% endblock %}

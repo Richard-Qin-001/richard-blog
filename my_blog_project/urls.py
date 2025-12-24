@@ -20,13 +20,16 @@ from django.contrib.auth import views as auth_views
 from blog import views
 from django.conf import settings
 from django.conf.urls.static import static
+from django_ratelimit.decorators import ratelimit
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/login/', auth_views.LoginView.as_view(), name='login'),
+    path('accounts/login/', ratelimit(key='ip', rate='5/m', block=True)(auth_views.LoginView.as_view()), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(next_page='/'), name='logout'),
     path('accounts/signup/', views.signup, name='signup'), 
     path('accounts/recovery/', views.password_recovery, name='password_recovery'),
+    path('accounts/regenerate-key/', views.regenerate_key, name='regenerate_key'),
+    path('captcha/', include('captcha.urls')),
     path('', include('blog.urls')),
     path('users/', views.user_list, name='user_list'),
     path('users/<str:username>/', views.profile_public, name='profile_public'),

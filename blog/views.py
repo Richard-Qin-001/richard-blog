@@ -6,6 +6,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.core.paginator import Paginator
 from django.contrib.auth import login
+from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.decorators import permission_required, login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.admin.views.decorators import staff_member_required
@@ -16,6 +17,8 @@ from django.db.models.functions import TruncDay
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from datetime import timedelta
+from django_ratelimit.decorators import ratelimit
+import uuid
 
 def post_list(request, tag_name = None):
     query = request.GET.get('q')
@@ -221,11 +224,17 @@ def comment_like(request, pk):
 
 
 
+@ratelimit(key='ip', rate='1/m', block=True)
 def signup(request):
     if request.method == "POST":
         form = SignupForm(request.POST)
         if form.is_valid():
             user = form.save()
+            raw_key = str(uuid.uuid4()).replace('-', '').upper()[:16]
+            profile, created = Profile.objects.get_or_create(user=user)
+            profile.recovery_key = make_password(raw_key) 
+            profile.save()
+            messages.success(request, f"注册成功！请务必妥善保存您的恢复密钥（无法找回）：{raw_key}")
             try:
                 default_group = Group.objects.get(name='Guests')
                 user.groups.add(default_group)
@@ -233,7 +242,7 @@ def signup(request):
                 pass
                 
             login(request, user, backend='blog.backends.EmailOrUsernameBackend')
-            return redirect('post_list')
+            render(request, 'registration/signup.html', {'form': SignupForm()})
     else:
         form = SignupForm()
     return render(request, 'registration/signup.html', {'form': form})
@@ -251,15 +260,17 @@ def profile_edit(request):
         form = ProfileForm(instance=profile)
     return render(request, 'user/profile_edit.html', {'form': form})
 
+@ratelimit(key='ip', rate='3/h', block=True)
 def password_recovery(request):
     if request.method == "POST":
         username = request.POST.get('username')
-        key = request.POST.get('recovery_key').strip().upper()
+        input_key = request.POST.get('recovery_key').strip().upper()
         new_password = request.POST.get('new_password')
         
         try:
             user = User.objects.get(username=username)
-            if user.profile.recovery_key == key:
+            profile = user.profile
+            if check_password(input_key, profile.recovery_key):
                 user.set_password(new_password)
                 user.save()
                 messages.success(request, "密码已通过密钥重置成功，请重新登录！")
@@ -270,6 +281,23 @@ def password_recovery(request):
             messages.error(request, "该用户名不存在。")
             
     return render(request, 'registration/password_recovery.html')
+
+@login_required
+def regenerate_key(request):
+    if request.method == "POST":
+        new_raw_key = str(uuid.uuid4()).replace('-', '').upper()[:16]
+    
+        profile = request.user.profile
+        profile.recovery_key = make_password(new_raw_key)
+        profile.save()
+        
+        messages.warning(request, f"新恢复密钥已生成！请立即保存，离开此页面后将无法再次查看：{new_raw_key}")
+        
+        return redirect('profile_edit')
+    return redirect('profile_edit')
+
+
+
 
 def user_list(request):
     users = User.objects.annotate(post_count=Count('post')).select_related('profile').order_by('-date_joined')
